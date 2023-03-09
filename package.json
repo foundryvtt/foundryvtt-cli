@@ -1,0 +1,20 @@
+{
+  "name": "fvtt",
+  "productName": "Foundry VTT CLI",
+  "description": "The Official CLI for Foundry VTT",
+  "version": "0.0.1",
+  "author": {
+    "name": "Foundry Gaming LLC",
+    "email": "admin@foundryvtt.com",
+    "url": "https://foundryvtt.com"
+  },
+  "main": "fvtt.mjs",
+  "homepage": "https://foundryvtt.com",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "classic-level": "^1.2.0",
+    "js-yaml": "^4.1.0",
+    "yargs": "^17.7.1"
+  }
+}
