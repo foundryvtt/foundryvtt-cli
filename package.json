@@ -9,6 +9,9 @@
     "url": "https://foundryvtt.com"
   },
   "main": "fvtt.mjs",
+  "bin": {
+    "fvtt": "fvtt.mjs"
+  },
   "homepage": "https://foundryvtt.com",
   "license": "MIT",
   "private": false,
