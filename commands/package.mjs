@@ -32,11 +32,10 @@ export function getCommand() {
                 demandOption: currentPackageType === null,
             });
 
-            yargs.option("documentName", {
+            yargs.option("compendiumName", {
                 alias: "n",
-                describe: "The document name, for Pack based Actions.",
-                type: "string",
-                choices: [ "Actor", "Card", "Item", "Journal", "Playlist", "Scene", "Table" ]
+                describe: "The Compendium name, for Copmendium Pack based Actions.",
+                type: "string"
             });
 
             yargs.option("directory", {
@@ -126,20 +125,20 @@ export function getCommand() {
     async function _handleWrite(argv) {
         const typeDir = currentPackageType.toLowerCase() + "s";
 
-        if ( !argv.documentName ) {
-            console.error("No documentName provided for the `writePack` action. Try again with `-n <documentName>`.");
+        if ( !argv.compendiumName ) {
+            console.error("No Compendium Name provided for the `writePack` action. Try again with `-n <name>`.");
             return;
         }
 
-        const documentDir = argv.documentName.toLowerCase() + "s";
+        const compendiumDir = argv.compendiumName;
         const dataPath = Config.instance.get("dataPath");
         if ( !dataPath ) {
             console.error("No dataPath configured. Call `configure set dataPath <path>` first.");
             return;
         }
 
-        const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/data/${documentDir}`);
-        const outputDir = normalizePath(`${argv.directory ?? `./${typeDir}/${currentPackageId}`}/${documentDir}`);
+        const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumDir}`);
+        const outputDir = normalizePath(`${argv.directory ?? `./${typeDir}/${currentPackageId}`}/${compendiumDir}`);
         console.log(`Writing pack "${packDir}" to "${outputDir}"`);
 
         try {
@@ -150,15 +149,18 @@ export function getCommand() {
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, {recursive: true});
             }
+            const entries = new Map();
             for await (const [key, value] of db.iterator()) {
                 const name = value.name ? `${value.name.toLowerCase().replaceAll(" ", "_")}_${value._id}` : key;
+                entries.set(name, value);
+            }
+            await db.close();
+
+            for (const [name, value] of entries) {
                 const fileName = `${outputDir}/${name}.yml`;
-                ;
                 fs.writeFileSync(fileName, yaml.dump(value));
                 console.log(`Wrote ${fileName}`);
             }
-
-            await db.close();
         }
         catch (err) {
             console.error(err);
@@ -176,19 +178,19 @@ export function getCommand() {
     async function _handlePack(argv) {
         const typeDir = currentPackageType.toLowerCase() + "s";
 
-        if ( !argv.documentName ) {
-            console.error("No documentName provided for the `writePack` action. Try again with `-n <documentName>`.");
+        if ( !argv.compendiumName ) {
+            console.error("No Compendium Name provided for the `writePack` action. Try again with `-n <name>`.");
             return;
         }
 
-        const documentDir = argv.documentName.toLowerCase() + "s";
+        const compendiumDir = argv.compendiumName;
         const dataPath = Config.instance.get("dataPath");
         if ( !dataPath ) {
             console.error("No dataPath configured. Call `configure set dataPath <path>` first.");
             return;
         }
-        const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/data/${documentDir}`);
-        const inputDir = normalizePath(`${argv.directory ? argv.directory : `./${typeDir}/${currentPackageId}`}/${documentDir}`);
+        const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumDir}`);
+        const inputDir = normalizePath(`${argv.directory ? argv.directory : `./${typeDir}/${currentPackageId}`}/${compendiumDir}`);
         console.log(`Packing "${inputDir}" into pack "${packDir}"`);
 
         try {
