@@ -46,8 +46,6 @@ export function getCommand() {
             });
         },
         handler: async (argv) => {
-            console.log("package handler", argv);
-
             if ( argv.id ) {
                 currentPackageId = argv.id;
             }
@@ -190,7 +188,7 @@ export function getCommand() {
             return;
         }
         const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/data/${documentDir}`);
-        const inputDir = normalizePath(`${argv.directory ?? `./${typeDir}/${currentPackageId}`}/${documentDir}`);
+        const inputDir = normalizePath(`${argv.directory ? argv.directory : `./${typeDir}/${currentPackageId}`}/${documentDir}`);
         console.log(`Packing "${inputDir}" into pack "${packDir}"`);
 
         try {

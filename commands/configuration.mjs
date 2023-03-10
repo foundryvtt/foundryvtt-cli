@@ -8,7 +8,7 @@ export function getCommand() {
             yargs.positional("action", {
                 describe: "The action to perform",
                 type: "string",
-                choices: ["get", "set"]
+                choices: ["get", "set", "path"]
             })
                 .positional("key", {
                     describe: "The configuration key",
@@ -20,7 +20,6 @@ export function getCommand() {
                 });
         },
         handler: async (argv) => {
-            console.log("configure handler", argv);
 
             // Handle actions
             switch ( argv.action ) {
@@ -33,10 +32,32 @@ export function getCommand() {
                     console.log(`Set ${argv.key} to ${argv.value}`);
                     break;
                 }
-                default: {
+                case "view": {
                     // Output the current configuration
-                    console.log(Config.instance.getAll());
+                    console.log("Current Configuration:", Config.instance.getAll());
                     break;
+                }
+                case "path": {
+                    // Output the current configuration file path
+                    console.log("Current Configuration File:", Config.instance.configPath);
+                    break;
+                }
+                default: {
+                    // Determine if the dataPath and installPath are set
+                    const installPath = Config.instance.get("installPath");
+                    if ( !installPath ) {
+                        console.error("The installation path is not set. Use `configure set installPath <path>` to set it. Install paths look like `C:/Program Files/Foundry Virtual Tabletop`");
+                    }
+
+                    const dataPath = Config.instance.get("dataPath");
+                    if ( !dataPath ) {
+                        console.error("The data path is not set. Use `configure set dataPath <path>` to set it. Data paths look like `C:/Users/Example/AppData/Local/FoundryVTT/Data`");
+                    }
+
+                    // If both are set, configuration is complete
+                    if ( installPath && dataPath ) {
+                        console.log("Configuration complete!");
+                    }
                 }
             }
         }

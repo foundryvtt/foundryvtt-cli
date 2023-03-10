@@ -1,5 +1,6 @@
 import fs from "fs";
 import yaml from "js-yaml";
+import path from "path";
 
 /**
  * Manages the configuration of the CLI. Stored as config.yml
@@ -20,12 +21,22 @@ export default class Config {
     /* -------------------------------------------- */
 
     constructor() {
-        this.#config = yaml.load(fs.readFileSync("./config.yml", "utf8"));
+
+        // Set the config file path to the appData directory
+        this.configPath = path.join(process.env.APPDATA ?? process.env.HOME, "config.yml");
+
+        // Ensure the config file exists
+        if (!fs.existsSync(this.configPath)) {
+            fs.writeFileSync(this.configPath, yaml.dump({}));
+        }
+        this.#config = yaml.load(fs.readFileSync(this.configPath, "utf8"));
     }
 
     /* -------------------------------------------- */
 
     #config = {};
+
+    configPath = "";
 
     /* -------------------------------------------- */
 
@@ -52,6 +63,6 @@ export default class Config {
 
     #writeConfig() {
         // Write to disk
-        fs.writeFileSync("./config.yml", yaml.dump(this.#config));
+        fs.writeFileSync(this.configPath, yaml.dump(this.#config));
     }
 }
