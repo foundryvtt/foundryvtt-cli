@@ -1,5 +1,9 @@
 import Config from "../config.mjs";
 
+/**
+ * Get the command object for the configuration command
+ * @returns {{handler: ((function(*): Promise<void>)|*), builder: builder, describe: string, command: string}}
+ */
 export function getCommand() {
     return {
         command: "configure [action] [key] [value]",

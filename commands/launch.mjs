@@ -2,6 +2,10 @@ import Config from "../config.mjs";
 import {spawn} from "child_process";
 import path from "path";
 
+/**
+ * Get the command object for the launch command
+ * @returns {{handler: ((function(*): Promise<void>)|*), builder: builder, describe: string, command: string}}
+ */
 export function getCommand() {
     return {
         command: "launch",

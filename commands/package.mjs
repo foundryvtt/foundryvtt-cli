@@ -4,6 +4,10 @@ import yaml from "js-yaml";
 import path from "path";
 import fs from "fs";
 
+/**
+ * Get the command object for the package command
+ * @returns {{handler: ((function(*): Promise<void>)|*), builder: builder, describe: string, command: string}}
+ */
 export function getCommand() {
     let currentPackageId = Config.instance.get("currentPackageId");
     let currentPackageType = Config.instance.get("currentPackageType");
@@ -90,6 +94,10 @@ export function getCommand() {
                 }
 
                 default: {
+                    if ( !currentPackageId ) {
+                        console.error("No package ID is currently set. Use `package workon <id>` to set it.");
+                        return;
+                    }
                     console.log(`Currently in ${currentPackageType} ${currentPackageId}`);
                     break;
                 }
@@ -101,6 +109,7 @@ export function getCommand() {
 
     /**
      * Set the current package ID and type
+     * @param {Object} argv                  The command line arguments
      * @private
      */
     function _handleWorkon(argv) {
@@ -144,6 +153,11 @@ export function getCommand() {
 
     /* -------------------------------------------- */
 
+    /**
+     * Normalize a path to use POSIX separators
+     * @param {string} pathToNormalize      The path to normalize
+     * @returns {string}
+     */
     function normalizePath(pathToNormalize) {
         return path.normalize(pathToNormalize).split(path.sep).join(path.posix.sep);
     }
@@ -152,6 +166,7 @@ export function getCommand() {
 
     /**
      * Discover the list of all Packages in the dataPath
+     * @param {Object} argv                  The command line arguments
      * @returns {*}
      */
     function discoverPackageDirectory(argv) {
@@ -228,7 +243,7 @@ export function getCommand() {
 
     /**
      * Load a pack from a directory and serialize the DB entries, each to their own file
-     * @param argv
+     * @param {Object} argv                  The command line arguments
      * @returns {Promise<void>}
      * @private
      */
@@ -258,14 +273,8 @@ export function getCommand() {
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, {recursive: true});
             }
-            const entries = new Map();
             for await (const [key, value] of db.iterator()) {
                 const name = value.name ? `${value.name.toLowerCase().replaceAll(" ", "_")}_${value._id}` : key;
-                entries.set(name, value);
-            }
-            await db.close();
-
-            for (const [name, value] of entries) {
                 let fileName;
                 if ( argv.yaml ) {
                     fileName = `${outputDir}/${name}.yml`;
@@ -277,6 +286,7 @@ export function getCommand() {
                 }
                 console.log(`Wrote ${fileName}`);
             }
+            await db.close();
         }
         catch (err) {
             console.error(err);
@@ -287,7 +297,7 @@ export function getCommand() {
 
     /**
      * Read serialized files from a directory and write them to a pack db
-     * @param argv
+     * @param {Object} argv                  The command line arguments
      * @returns {Promise<void>}
      * @private
      */
@@ -312,15 +322,17 @@ export function getCommand() {
         try {
             // Load the directory as a ClassicLevel db
             const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
+            const batch = db.batch();
 
             // Iterate over all YAML files in the input directory, writing them to the db
             const files = fs.readdirSync(inputDir);
             for ( const file of files ) {
                 const fileContents = fs.readFileSync(path.join(inputDir, file));
                 const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
-                await db.put(value._id, value);
+                batch.put(value._id, value);
                 console.log(`Packed ${value._id}${value.name ? ` (${value.name})` : ""}`);
             }
+            await batch.write();
         }
         catch (err) {
             console.error(err);
