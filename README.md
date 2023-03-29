@@ -3,7 +3,7 @@ The official Foundry VTT CLI
 
 ## Installation
 ```bash
-npm install -g foundryvtt-cli
+npm install -g @foundryvtt/foundryvtt-cli
 ```
 
 ## Usage
