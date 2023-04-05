@@ -3,7 +3,7 @@ The official Foundry VTT CLI
 
 ## Installation
 ```bash
-npm install -g foundryvtt-cli
+npm install -g @foundryvtt/foundryvtt-cli
 ```
 
 ## Usage
@@ -96,6 +96,16 @@ fvtt package pack "compendiumName"
 ```
 
 Reads a directory of serialized Objects and writes them to a LevelDB database in the current Package /packs/ directory. There are a number of options available to customize the operation, check out `fvtt package pack --help` for more information.
+
+## Example Workflow
+
+```bash
+fvtt configure
+fvtt package workon "1001-fish"
+fvtt package unpack "fish"
+. . . // Make some updates to the files
+fvtt package pack "fish"
+```
 
 ## Development
 ```bash

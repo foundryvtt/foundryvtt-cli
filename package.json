@@ -2,7 +2,7 @@
   "name": "@foundryvtt/foundryvtt-cli",
   "productName": "Foundry VTT CLI",
   "description": "The Official CLI for Foundry VTT",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": {
     "name": "Foundry Gaming LLC",
     "email": "admin@foundryvtt.com",
