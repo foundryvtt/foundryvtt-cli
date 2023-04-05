@@ -30,6 +30,8 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org
       - run: npm ci
+      - run: git config --global user.email "cody@foundryvtt.com"
+      - run: git config --global user.name "Cody Swendrowski"
       - run: npm version ${{ github.ref_name }}
       - run: npm publish --access=public
         env:
