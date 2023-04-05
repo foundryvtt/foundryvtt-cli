@@ -241,6 +241,26 @@ export function getCommand() {
 
     /* -------------------------------------------- */
 
+    function isFileLocked(filepath) {
+        try {
+            // Try to open the file with the 'w' flag, which requests write access
+            const fd = fs.openSync(filepath, 'w');
+
+            // If the file was successfully opened, it is not locked
+            fs.closeSync(fd);
+            return false;
+        } catch (err) {
+            // If the file could not be opened, it is locked
+            if (err.code === 'EBUSY') {
+                return true;
+            } else {
+                throw err;
+            }
+        }
+    }
+
+    /* -------------------------------------------- */
+
     /**
      * Load a pack from a directory and serialize the DB entries, each to their own file
      * @param {Object} argv                  The command line arguments
@@ -263,11 +283,18 @@ export function getCommand() {
 
         const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
         const outputDir = normalizePath(argv.directory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
+
+        if ( isFileLocked(packDir + "/LOCK") ) {
+            console.error(`The pack "${packDir}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`);
+            return;
+        }
+
         console.log(`Writing pack "${packDir}" to "${outputDir}"`);
 
         try {
             // Load the directory as a ClassicLevel db
             const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
+            const keys = await db.keys().all();
 
             // Iterate over all entries in the db, writing them as individual YAML files
             if (!fs.existsSync(outputDir)) {
@@ -275,6 +302,7 @@ export function getCommand() {
             }
             for await (const [key, value] of db.iterator()) {
                 const name = value.name ? `${value.name.toLowerCase().replaceAll(" ", "_")}_${value._id}` : key;
+                value._key = key;
                 let fileName;
                 if ( argv.yaml ) {
                     fileName = `${outputDir}/${name}.yml`;
@@ -317,6 +345,12 @@ export function getCommand() {
         }
         const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
         const inputDir = normalizePath(argv.directory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
+
+        if ( isFileLocked(packDir + "/LOCK") ) {
+            console.error(`The pack "${packDir}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`);
+            return;
+        }
+
         console.log(`Packing "${inputDir}" into pack "${packDir}"`);
 
         try {
@@ -326,13 +360,26 @@ export function getCommand() {
 
             // Iterate over all YAML files in the input directory, writing them to the db
             const files = fs.readdirSync(inputDir);
+            const seenKeys = new Set();
             for ( const file of files ) {
                 const fileContents = fs.readFileSync(path.join(inputDir, file));
                 const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
-                batch.put(value._id, value);
+                const key = value._key;
+                delete value._key;
+                seenKeys.add(key);
+                batch.put(key, value);
                 console.log(`Packed ${value._id}${value.name ? ` (${value.name})` : ""}`);
             }
+
+            // Remove any entries in the db that are not in the input directory
+            for ( const key of await db.keys().all() ) {
+                if ( !seenKeys.has(key) ) {
+                    batch.del(key);
+                    console.log(`Removed ${key}`);
+                }
+            }
             await batch.write();
+            await db.close();
         }
         catch (err) {
             console.error(err);
