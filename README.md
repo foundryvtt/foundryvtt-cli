@@ -87,7 +87,7 @@ Clears the current working package.
 ```bash
 fvtt package unpack "compendiumName"
 ```
-Reads a LevelDB database from the current Package /packs/ directory and writes each document as a serialized Object to its own file.
+Reads a database from the current Package /packs/ directory and writes each document as a serialized Object to its own file.
 There are a number of options available to customize the output, check out `fvtt package unpack --help` for more information.
 
 #### Pack
@@ -95,7 +95,7 @@ There are a number of options available to customize the output, check out `fvtt
 fvtt package pack "compendiumName"
 ```
 
-Reads a directory of serialized Objects and writes them to a LevelDB database in the current Package /packs/ directory. There are a number of options available to customize the operation, check out `fvtt package pack --help` for more information.
+Reads a directory of serialized Objects and writes them to a database in the current Package /packs/ directory. There are a number of options available to customize the operation, check out `fvtt package pack --help` for more information.
 
 ## Example Workflow
 

@@ -3,6 +3,8 @@ import {ClassicLevel} from "classic-level";
 import yaml from "js-yaml";
 import path from "path";
 import fs from "fs";
+import chalk from 'chalk';
+import Datastore from "nedb-promises";
 
 /**
  * Get the command object for the package command
@@ -46,9 +48,15 @@ export function getCommand() {
                 type: "string"
             });
 
-            yargs.option("directory", {
-                alias: "d",
-                describe: "The directory to serialize to / from, for Pack based Actions.",
+            yargs.option("inputDirectory", {
+                alias: "id",
+                describe: "The directory to read from, for Pack based Actions.",
+                type: "string"
+            });
+
+            yargs.option("outputDirectory", {
+                alias: "od",
+                describe: "The directory to write to, for Pack based Actions.",
                 type: "string"
             });
 
@@ -60,6 +68,11 @@ export function getCommand() {
             yargs.option("verbose", {
                 alias: "v",
                 describe: "Whether to output verbose logging.",
+                type: "boolean"
+            });
+
+            yargs.options("nedb", {
+                describe: "Whether to use NeDB instead of ClassicLevel for database operations.",
                 type: "boolean"
             });
         },
@@ -95,10 +108,10 @@ export function getCommand() {
 
                 default: {
                     if ( !currentPackageId ) {
-                        console.error("No package ID is currently set. Use `package workon <id>` to set it.");
+                        console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
                         return;
                     }
-                    console.log(`Currently in ${currentPackageType} ${currentPackageId}`);
+                    console.log(`Currently in ${chalk.magenta(currentPackageType)} ${chalk.cyan(currentPackageId)}`);
                     break;
                 }
             }
@@ -122,19 +135,19 @@ export function getCommand() {
             const game = discoverPackageDirectory(argv);
             const pkgCount = game.packages.filter(p => p[0] === currentPackageId).length;
             if ( pkgCount > 1 ) {
-                console.error(`Multiple packages with ID ${currentPackageId} found. Please specify the package type with --type`);
+                console.error(chalk.red(`Multiple packages with ID ${chalk.cyan(currentPackageId)} found. Please specify the package type with ${chalk.yellow("--type")}`));
                 return;
             }
             const pkg = game.worlds.get(currentPackageId) ?? game.systems.get(currentPackageId) ?? game.modules.get(currentPackageId);
             if ( !pkg ) {
-                console.error(`No package with ID ${currentPackageId} found.`);
+                console.error(chalk.red(`No package with ID ${chalk.cyan(currentPackageId)} found.`));
                 return;
             }
             currentPackageType = pkg.type;
         }
 
         Config.instance.set("currentPackageType", currentPackageType);
-        console.log(`Swapped to ${currentPackageType} ${currentPackageId}`);
+        console.log(`Swapped to ${chalk.magenta(currentPackageType)} ${chalk.cyan(currentPackageId)}`);
     }
 
     /* -------------------------------------------- */
@@ -172,7 +185,7 @@ export function getCommand() {
     function discoverPackageDirectory(argv) {
         const dataPath = Config.instance.get("dataPath");
         if ( !dataPath ) {
-            console.error("No dataPath configured. Call `configure set dataPath <path>` first.");
+            console.error(chalk.red(`No dataPath configured. Call ${chalk.yellow("`configure set dataPath <path>`")} first.`));
             return;
         }
 
@@ -199,7 +212,7 @@ export function getCommand() {
                     game.modules.set(moduleData.id ?? moduleData.name, moduleData);
                 }
                 catch (e) {
-                    if ( argv.verbose ) console.error(`Error reading module.json for ${module.name}: ${e}`);
+                    if ( argv.verbose ) console.error(chalk.red(`Error reading module.json for ${chalk.blue(module.name)}: ${e}`));
                 }
             }
         }
@@ -214,7 +227,7 @@ export function getCommand() {
                     game.systems.set(systemData.id ?? systemData.name, systemData);
                 }
                 catch (e) {
-                    if ( argv.verbose ) console.error(`Error reading system.json for ${system.name}: ${e}`);
+                    if ( argv.verbose ) console.error(chalk.red(`Error reading system.json for ${chalk.blue(system.name)}: ${e}`));
                 }
             }
         }
@@ -229,7 +242,7 @@ export function getCommand() {
                     game.worlds.set(worldData.id ?? worldData.name, worldData);
                 }
                 catch (e) {
-                    if ( argv.verbose ) console.error(`Error reading world.json for ${world.name}: ${e}`);
+                    if ( argv.verbose ) console.error(chalk.red(`Error reading world.json for ${chalk.blue(world.name)}: ${e}`));
                 }
             }
         }
@@ -241,6 +254,11 @@ export function getCommand() {
 
     /* -------------------------------------------- */
 
+    /**
+     * Determines whether a file is locked by another process
+     * @param {string} filepath
+     * @returns {boolean}
+     */
     function isFileLocked(filepath) {
         try {
             // Try to open the file with the 'w' flag, which requests write access
@@ -268,6 +286,7 @@ export function getCommand() {
      * @private
      */
     async function _handleUnpack(argv) {
+        const dbMode = argv.nedb ? "nedb" : "classic-level";
         const typeDir = currentPackageType.toLowerCase() + "s";
         const compendiumName = argv.compendiumName ?? argv.value;
         if ( !compendiumName ) {
@@ -277,48 +296,104 @@ export function getCommand() {
 
         const dataPath = Config.instance.get("dataPath");
         if ( !dataPath ) {
-            console.error("No dataPath configured. Call `configure set dataPath <path>` first.");
+            console.error(chalk.red("No dataPath configured. Call `configure set dataPath <path>` first."));
             return;
         }
 
-        const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
-        const outputDir = normalizePath(argv.directory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
+        const packDir = normalizePath(argv.inputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
+        const outputDir = normalizePath(argv.outputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
 
         if ( isFileLocked(packDir + "/LOCK") ) {
-            console.error(`The pack "${packDir}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`);
+            console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
         }
 
-        console.log(`Writing pack "${packDir}" to "${outputDir}"`);
+        console.log(`[${dbMode}] Writing pack "${chalk.blue(packDir)}" to "${chalk.blue(outputDir)}"`);
 
         try {
-            // Load the directory as a ClassicLevel db
-            const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
-            const keys = await db.keys().all();
-
-            // Iterate over all entries in the db, writing them as individual YAML files
-            if (!fs.existsSync(outputDir)) {
-                fs.mkdirSync(outputDir, {recursive: true});
+            if ( dbMode === "nedb" ) {
+                await _unpackNedb(packDir, outputDir, argv, compendiumName);
             }
-            for await (const [key, value] of db.iterator()) {
-                const name = value.name ? `${value.name.toLowerCase().replaceAll(" ", "_")}_${value._id}` : key;
-                value._key = key;
-                let fileName;
-                if ( argv.yaml ) {
-                    fileName = `${outputDir}/${name}.yml`;
-                    fs.writeFileSync(fileName, yaml.dump(value));
-                }
-                else {
-                    fileName = `${outputDir}/${name}.json`;
-                    fs.writeFileSync(fileName, JSON.stringify(value, null, 2));
-                }
-                console.log(`Wrote ${fileName}`);
+            else {
+                await _unpackClassicLevel(packDir, outputDir, argv);
             }
-            await db.close();
         }
         catch (err) {
             console.error(err);
         }
+    }
+
+    /* -------------------------------------------- */
+
+    /**
+     * Load a pack from a directory and serialize the DB entries, each to their own file
+     * @param {string} packDir          The directory path to the pack
+     * @param {string} outputDir        The directory path to write the serialized files
+     * @param {Object} argv             The command line arguments
+     * @param {string} compendiumName   The name of the compendium
+     * @returns {Promise<void>}
+     * @private
+     */
+    async function _unpackNedb(packDir, outputDir, argv, compendiumName) {
+        // Load the directory as a Nedb
+        const db = Datastore.create(`${packDir}/${compendiumName}.db`);
+
+        // Iterate over all entries in the db, writing them as individual YAML files
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, {recursive: true});
+        }
+
+        const docs = await db.find({});
+        for (const doc of docs) {
+            const name = doc.name ? `${doc.name.toLowerCase().replaceAll(" ", "_")}_${doc._id}` : doc._id;
+            let fileName;
+            if ( argv.yaml ) {
+                fileName = `${outputDir}/${name}.yml`;
+                fs.writeFileSync(fileName, yaml.dump(doc));
+            }
+            else {
+                fileName = `${outputDir}/${name}.json`;
+                fs.writeFileSync(fileName, JSON.stringify(doc, null, 2));
+            }
+            console.log(`Wrote ${chalk.blue(fileName)}`);
+        }
+    }
+
+    /* -------------------------------------------- */
+
+    /**
+     * Load a pack from a directory and serialize the DB entries, each to their own file
+     * @param {string} packDir          The directory path to the pack
+     * @param {string} outputDir        The directory path to write the serialized files
+     * @param {Object} argv             The command line arguments
+     * @returns {Promise<void>}
+     * @private
+     */
+    async function _unpackClassicLevel(packDir, outputDir, argv) {
+        // Load the directory as a ClassicLevel db
+        const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
+        const keys = await db.keys().all();
+
+        // Iterate over all entries in the db, writing them as individual YAML files
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, {recursive: true});
+        }
+        for await (const [key, value] of db.iterator()) {
+            const name = value.name ? `${value.name.toLowerCase().replaceAll(" ", "_")}_${value._id}` : key;
+            value._key = key;
+            let fileName;
+            if ( argv.yaml ) {
+                fileName = `${outputDir}/${name}.yml`;
+                fs.writeFileSync(fileName, yaml.dump(value));
+            }
+            else {
+                fileName = `${outputDir}/${name}.json`;
+                fs.writeFileSync(fileName, JSON.stringify(value, null, 2));
+            }
+            console.log(`Wrote ${chalk.blue(fileName)}`);
+        }
+
+        await db.close();
     }
 
     /* -------------------------------------------- */
@@ -330,59 +405,132 @@ export function getCommand() {
      * @private
      */
     async function _handlePack(argv) {
+        const dbMode = argv.nedb ? "nedb" : "classic-level";
         const typeDir = currentPackageType.toLowerCase() + "s";
 
         const compendiumName = argv.compendiumName ?? argv.value;
         if ( !compendiumName ) {
-            console.error("No Compendium Name provided for the `pack` action. Try again with `-n <name>`.");
+            console.error(chalk.red(`No Compendium Name provided for the ${chalk.yellow(`pack`)} action. Try again with ${chalk.yellow(`-n <name>`)}.`));
             return;
         }
 
         const dataPath = Config.instance.get("dataPath");
         if ( !dataPath ) {
-            console.error("No dataPath configured. Call `configure set dataPath <path>` first.");
+            console.error(chalk.red(`No dataPath configured. Call ${chalk.yellow(`configure set dataPath <path>`)} first.`));
             return;
         }
-        const packDir = normalizePath(`${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
-        const inputDir = normalizePath(argv.directory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
+        const packDir = normalizePath(argv.outputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
+        const inputDir = normalizePath(argv.inputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
 
         if ( isFileLocked(packDir + "/LOCK") ) {
-            console.error(`The pack "${packDir}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`);
+            console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
         }
 
-        console.log(`Packing "${inputDir}" into pack "${packDir}"`);
+        console.log(`[${dbMode}] Packing "${chalk.blue(inputDir)}" into pack "${chalk.blue(packDir)}"`);
 
         try {
-            // Load the directory as a ClassicLevel db
-            const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
-            const batch = db.batch();
-
-            // Iterate over all YAML files in the input directory, writing them to the db
-            const files = fs.readdirSync(inputDir);
-            const seenKeys = new Set();
-            for ( const file of files ) {
-                const fileContents = fs.readFileSync(path.join(inputDir, file));
-                const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
-                const key = value._key;
-                delete value._key;
-                seenKeys.add(key);
-                batch.put(key, value);
-                console.log(`Packed ${value._id}${value.name ? ` (${value.name})` : ""}`);
+            if ( dbMode === "nedb" ) {
+                await _packNedb(packDir, inputDir, compendiumName);
             }
-
-            // Remove any entries in the db that are not in the input directory
-            for ( const key of await db.keys().all() ) {
-                if ( !seenKeys.has(key) ) {
-                    batch.del(key);
-                    console.log(`Removed ${key}`);
-                }
+            else {
+                await _packClassicLevel(packDir, inputDir, compendiumName);
             }
-            await batch.write();
-            await db.close();
         }
         catch (err) {
-            console.error(err);
+            console.error(chalk.red(err));
         }
+    }
+
+    /* -------------------------------------------- */
+
+    /**
+     * Read serialized files from a directory and write them to a pack db
+     * @param {string} packDir              The directory path to the pack
+     * @param {string} inputDir             The directory path to read the serialized files from
+     * @param {string} compendiumName       The name of the compendium
+     * @returns {Promise<void>}
+     * @private
+     */
+    async function _packNedb(packDir, inputDir, compendiumName) {
+        // Load the directory as a Nedb
+        const db = Datastore.create(`${packDir}/${compendiumName}.db`);
+
+        // Iterate over all YAML files in the input directory, writing them to the db
+        const files = fs.readdirSync(inputDir);
+        const seenKeys = new Set();
+        for ( const file of files ) {
+            const fileContents = fs.readFileSync(path.join(inputDir, file));
+            const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
+            const key = value._key;
+            // If the key starts with !folders, we should skip packing it as nedb doesn't support folders
+            if ( key.startsWith("!folders") ) continue;
+
+            delete value._key;
+            seenKeys.add(value._id);
+
+            // If key already exists, update it
+            const existing = await db.findOne({_id: value._id});
+            if ( existing ) {
+                await db.update({_id: key}, value);
+                console.log(`Updated ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+            }
+            else {
+                await db.insert(value);
+                console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+            }
+        }
+
+        // Remove any entries which were not updated
+        const docs = await db.find({_id: {$nin: Array.from(seenKeys)}})
+        for ( const doc of docs ) {
+            await db.remove({_id: doc._id}, {});
+            console.log(`Removed ${chalk.blue(doc._id)}${chalk.blue(doc.name ? ` (${doc.name})` : "")}`);
+        }
+
+        // Compact the database
+        db.stopAutocompaction();
+        await new Promise(resolve => {
+            db.once("compaction.done", resolve);
+            db.compactDatafile();
+        });
+    }
+
+    /* -------------------------------------------- */
+
+    /**
+     * Read serialized files from a directory and write them to a pack db
+     * @param {string} packDir        The directory path to the pack
+     * @param {string} inputDir       The directory path to read the serialized files from
+     * @returns {Promise<void>}
+     * @private
+     */
+    async function _packClassicLevel(packDir, inputDir) {
+        // Load the directory as a ClassicLevel db
+        const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
+        const batch = db.batch();
+
+        // Iterate over all YAML files in the input directory, writing them to the db
+        const files = fs.readdirSync(inputDir);
+        const seenKeys = new Set();
+        for ( const file of files ) {
+            const fileContents = fs.readFileSync(path.join(inputDir, file));
+            const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
+            const key = value._key;
+            delete value._key;
+            seenKeys.add(key);
+            batch.put(key, value);
+            console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+        }
+
+        // Remove any entries in the db that are not in the input directory
+        for ( const key of await db.keys().all() ) {
+            if ( !seenKeys.has(key) ) {
+                batch.del(key);
+                console.log(`Removed ${chalk.blue(key)}`);
+            }
+        }
+        await batch.write();
+        await db.close();
     }
 }

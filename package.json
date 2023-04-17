@@ -16,9 +16,13 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
+    "chalk": "^5.2.0",
     "classic-level": "^1.2.0",
     "esm": "^3.2.25",
     "js-yaml": "^4.1.0",
+    "mkdirp": "^3.0.0",
+    "nedb-core": "^3.0.6",
+    "nedb-promises": "^6.2.1",
     "yargs": "^17.7.1"
   }
 }
