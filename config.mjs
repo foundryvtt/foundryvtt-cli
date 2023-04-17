@@ -27,7 +27,11 @@ export default class Config {
     constructor() {
 
         // Set the config file path to the appData directory
-        this.configPath = path.join(process.env.APPDATA ?? process.env.HOME, "config.yml");
+        const basePath = process.env.APPDATA ||
+            (process.platform === 'darwin' ? process.env.HOME + '/Library/Preferences':
+                process.env.HOME +'/.local/share');
+        this.configPath = path.join(basePath, ".fvttrc.yml");
+        console.log(this.configPath);
 
         // Ensure the config file exists
         if (!fs.existsSync(this.configPath)) {
