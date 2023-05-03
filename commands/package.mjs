@@ -29,11 +29,10 @@ export function getCommand() {
                 type: "string"
             });
 
-            // If no currentPackageId is set and the action is not "clear", require an `id` option to be set
+            // currentPackageId is only needed, if the data path has to be built with it.
             yargs.option("id", {
                 describe: "The package ID",
                 type: "string",
-                demandOption: currentPackageId === null,
             });
 
             yargs.option("type", {
@@ -287,15 +286,22 @@ export function getCommand() {
      */
     async function _handleUnpack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
-        const typeDir = currentPackageType.toLowerCase() + "s";
+        const typeDir = ""
+        if (!argv.outputDirectory || !argv.inputDirectory) {
+            typeDir = currentPackageType.toLowerCase() + "s";
+            if (!currentPackageId) {
+                console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
+                return;
+            }
+        }
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName ) {
+        if ( !compendiumName && ( dbMode === "nedb" || (!argv.outputDirectory || !argv.inputDirectory))) {
             console.error("No Compendium Name provided for the `unpack` action. Try again with `-n <name>`.");
             return;
         }
 
         const dataPath = Config.instance.get("dataPath");
-        if ( !dataPath ) {
+        if ( !dataPath && (!argv.outputDirectory || !argv.inputDirectory)) {
             console.error(chalk.red("No dataPath configured. Call `configure set dataPath <path>` first."));
             return;
         }
@@ -406,16 +412,23 @@ export function getCommand() {
      */
     async function _handlePack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
-        const typeDir = currentPackageType.toLowerCase() + "s";
+        const typeDir = ""
+        if (!argv.outputDirectory || !argv.inputDirectory) {
+            typeDir = currentPackageType.toLowerCase() + "s";
+            if (!currentPackageId) {
+                console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
+                return;
+            }
+        }
 
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName ) {
+        if ( !compendiumName && ( dbMode === "nedb" || (!argv.outputDirectory || !argv.inputDirectory)) ) {
             console.error(chalk.red(`No Compendium Name provided for the ${chalk.yellow(`pack`)} action. Try again with ${chalk.yellow(`-n <name>`)}.`));
             return;
         }
 
         const dataPath = Config.instance.get("dataPath");
-        if ( !dataPath ) {
+        if ( !dataPath && (!argv.outputDirectory || !argv.inputDirectory)) {
             console.error(chalk.red(`No dataPath configured. Call ${chalk.yellow(`configure set dataPath <path>`)} first.`));
             return;
         }
@@ -434,7 +447,7 @@ export function getCommand() {
                 await _packNedb(packDir, inputDir, compendiumName);
             }
             else {
-                await _packClassicLevel(packDir, inputDir, compendiumName);
+                await _packClassicLevel(packDir, inputDir);
             }
         }
         catch (err) {
