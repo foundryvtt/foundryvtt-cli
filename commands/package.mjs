@@ -286,8 +286,9 @@ export function getCommand() {
      */
     async function _handleUnpack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
+        const usingDefaultDirectory = (!argv.outputDirectory || !argv.inputDirectory);
         const typeDir = ""
-        if (!argv.outputDirectory || !argv.inputDirectory) {
+        if (usingDefaultDirectory) {
             typeDir = currentPackageType.toLowerCase() + "s";
             if (!currentPackageId) {
                 console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
@@ -295,13 +296,13 @@ export function getCommand() {
             }
         }
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName && ( dbMode === "nedb" || (!argv.outputDirectory || !argv.inputDirectory))) {
+        if ( !compendiumName && ( dbMode === "nedb" || usingDefaultDirectory)) {
             console.error("No Compendium Name provided for the `unpack` action. Try again with `-n <name>`.");
             return;
         }
 
         const dataPath = Config.instance.get("dataPath");
-        if ( !dataPath && (!argv.outputDirectory || !argv.inputDirectory)) {
+        if ( !dataPath && usingDefaultDirectory) {
             console.error(chalk.red("No dataPath configured. Call `configure set dataPath <path>` first."));
             return;
         }
@@ -412,8 +413,9 @@ export function getCommand() {
      */
     async function _handlePack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
+        const usingDefaultDirectory = (!argv.outputDirectory || !argv.inputDirectory);
         const typeDir = ""
-        if (!argv.outputDirectory || !argv.inputDirectory) {
+        if (usingDefaultDirectory) {
             typeDir = currentPackageType.toLowerCase() + "s";
             if (!currentPackageId) {
                 console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
@@ -422,13 +424,13 @@ export function getCommand() {
         }
 
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName && ( dbMode === "nedb" || (!argv.outputDirectory || !argv.inputDirectory)) ) {
+        if ( !compendiumName && ( dbMode === "nedb" || usingDefaultDirectory) ) {
             console.error(chalk.red(`No Compendium Name provided for the ${chalk.yellow(`pack`)} action. Try again with ${chalk.yellow(`-n <name>`)}.`));
             return;
         }
 
         const dataPath = Config.instance.get("dataPath");
-        if ( !dataPath && (!argv.outputDirectory || !argv.inputDirectory)) {
+        if ( !dataPath && usingDefaultDirectory) {
             console.error(chalk.red(`No dataPath configured. Call ${chalk.yellow(`configure set dataPath <path>`)} first.`));
             return;
         }
