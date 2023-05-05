@@ -177,6 +177,17 @@ export function getCommand() {
     /* -------------------------------------------- */
 
     /**
+     * Replace all non-alphanumeric characters with an underscore in a filename
+     * @param {string} filename         The filename to sanitize
+     * @returns {string}                The sanitized filename
+     */
+    function getSafeFilename(filename) {
+        return filename.replace(/[^a-zA-Z0-9]/g, '_');
+    }
+
+    /* -------------------------------------------- */
+
+    /**
      * Discover the list of all Packages in the dataPath
      * @param {Object} argv                  The command line arguments
      * @returns {*}
@@ -188,9 +199,9 @@ export function getCommand() {
             return;
         }
 
-        const modulesDir = normalizePath(`${dataPath}/modules`);
-        const systemsDir = normalizePath(`${dataPath}/systems`);
-        const worldsDir = normalizePath(`${dataPath}/worlds`);
+        const modulesDir = normalizePath(`${dataPath}/Data/modules`);
+        const systemsDir = normalizePath(`${dataPath}/Data/systems`);
+        const worldsDir = normalizePath(`${dataPath}/Data/worlds`);
 
         const game = {
             modules: new Map(),
@@ -307,15 +318,16 @@ export function getCommand() {
             return;
         }
 
-        const packDir = normalizePath(argv.inputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
-        const outputDir = normalizePath(argv.outputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
+        let packDir = normalizePath(argv.inputDirectory ?? `${dataPath}/Data/${typeDir}/${currentPackageId}/packs`);
+        if ( dbMode === "classic-level" ) packDir += `/${compendiumName}`;
+        const outputDir = normalizePath(argv.outputDirectory ?? `${packDir}/_source`);
 
-        if ( isFileLocked(packDir + "/LOCK") ) {
+        if ( (dbMode === "classic-level") && isFileLocked( packDir + "/LOCK") ) {
             console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
         }
 
-        console.log(`[${dbMode}] Writing pack "${chalk.blue(packDir)}" to "${chalk.blue(outputDir)}"`);
+        console.log(`[${dbMode}] Writing pack ${chalk.blue(compendiumName)} from "${chalk.blue(packDir)}" to "${chalk.blue(outputDir)}"`);
 
         try {
             if ( dbMode === "nedb" ) {
@@ -343,23 +355,47 @@ export function getCommand() {
      */
     async function _unpackNedb(packDir, outputDir, argv, compendiumName) {
         // Load the directory as a Nedb
-        const db = Datastore.create(`${packDir}/${compendiumName}.db`);
+        const db = new Datastore({
+            filename: `${packDir}/${compendiumName}.db`,
+            autoload: true
+        });
 
         // Iterate over all entries in the db, writing them as individual YAML files
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
 
+        // Load package manifests
+        let documentType = "Unknown";
+
+        const knownWorldTypes = [ "actors", "cards", "combats", "drawings", "fog", "folders", "items",
+            "journal", "macros", "messages", "playlists", "scenes", "tables" ];
+
+        if ( knownWorldTypes.includes(compendiumName) ) {
+            documentType = compendiumName;
+        }
+        else {
+            const game = discoverPackageDirectory(argv);
+            // Get all packs from world, system, and modules
+            const packs = [...game.modules, ...game.systems, ...game.worlds].map(p => p.packs).flat();
+            // Find the pack with the matching name
+            const pack = packs.find(p => p.name === compendiumName);
+            if ( pack ) {
+                documentType = pack.type ?? pack.entity;
+            }
+        }
+
         const docs = await db.find({});
         for (const doc of docs) {
             const name = doc.name ? `${doc.name.toLowerCase().replaceAll(" ", "_")}_${doc._id}` : doc._id;
+            doc._key = `!${documentType}!${doc._id}`;
             let fileName;
             if ( argv.yaml ) {
-                fileName = `${outputDir}/${name}.yml`;
+                fileName = getSafeFilename(`${outputDir}/${name}.yml`);
                 fs.writeFileSync(fileName, yaml.dump(doc));
             }
             else {
-                fileName = `${outputDir}/${name}.json`;
+                fileName = getSafeFilename(`${outputDir}/${name}.json`);
                 fs.writeFileSync(fileName, JSON.stringify(doc, null, 2));
             }
             console.log(`Wrote ${chalk.blue(fileName)}`);
@@ -390,11 +426,11 @@ export function getCommand() {
             value._key = key;
             let fileName;
             if ( argv.yaml ) {
-                fileName = `${outputDir}/${name}.yml`;
+                fileName = getSafeFilename(`${outputDir}/${name}.yml`);
                 fs.writeFileSync(fileName, yaml.dump(value));
             }
             else {
-                fileName = `${outputDir}/${name}.json`;
+                fileName = getSafeFilename(`${outputDir}/${name}.json`);
                 fs.writeFileSync(fileName, JSON.stringify(value, null, 2));
             }
             console.log(`Wrote ${chalk.blue(fileName)}`);
@@ -434,15 +470,16 @@ export function getCommand() {
             console.error(chalk.red(`No dataPath configured. Call ${chalk.yellow(`configure set dataPath <path>`)} first.`));
             return;
         }
-        const packDir = normalizePath(argv.outputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}`);
-        const inputDir = normalizePath(argv.inputDirectory ?? `${dataPath}/${typeDir}/${currentPackageId}/packs/${compendiumName}/_source`);
+        let packDir = normalizePath(argv.outputDirectory ?? `${dataPath}/Data/${typeDir}/${currentPackageId}/packs`);
+        if ( dbMode === "classic-level" ) packDir += `/${compendiumName}`;
+        const inputDir = normalizePath(argv.inputDirectory ?? `${packDir}/_source`);
 
-        if ( isFileLocked(packDir + "/LOCK") ) {
+        if ( (dbMode === "classic-level") && isFileLocked( packDir + "/LOCK") ) {
             console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
         }
 
-        console.log(`[${dbMode}] Packing "${chalk.blue(inputDir)}" into pack "${chalk.blue(packDir)}"`);
+        console.log(`[${dbMode}] Packing ${chalk.blue(compendiumName)} from "${chalk.blue(inputDir)}" into "${chalk.blue(packDir)}"`);
 
         try {
             if ( dbMode === "nedb" ) {

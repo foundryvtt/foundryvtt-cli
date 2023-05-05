@@ -12,7 +12,7 @@ export function getCommand() {
             yargs.positional("action", {
                 describe: "The action to perform",
                 type: "string",
-                choices: ["get", "set", "path"]
+                choices: ["get", "set", "path", "view"]
             })
                 .positional("key", {
                     describe: "The configuration key",
@@ -55,7 +55,7 @@ export function getCommand() {
 
                     const dataPath = Config.instance.get("dataPath");
                     if ( !dataPath ) {
-                        console.error("The data path is not set. Use `configure set dataPath <path>` to set it. Data paths look like `C:/Users/Example/AppData/Local/FoundryVTT/Data`");
+                        console.error("The data path is not set. Use `configure set dataPath <path>` to set it. Data paths look like `C:/Users/Example/AppData/Local/FoundryVTT`");
                     }
 
                     // If both are set, configuration is complete
