@@ -301,9 +301,8 @@ export function getCommand() {
     async function _handleUnpack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
         const usingDefaultDirectory = (!argv.outputDirectory || !argv.inputDirectory);
-        const typeDir = ""
+        const typeDir = usingDefaultDirectory ? currentPackageType.toLowerCase() + "s" : "";
         if (usingDefaultDirectory) {
-            typeDir = currentPackageType.toLowerCase() + "s";
             if (!currentPackageId) {
                 console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
                 return;
@@ -454,9 +453,8 @@ export function getCommand() {
     async function _handlePack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
         const usingDefaultDirectory = (!argv.outputDirectory || !argv.inputDirectory);
-        const typeDir = ""
+        const typeDir = usingDefaultDirectory ? currentPackageType.toLowerCase() + "s" : "";
         if (usingDefaultDirectory) {
-            typeDir = currentPackageType.toLowerCase() + "s";
             if (!currentPackageId) {
                 console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
                 return;
