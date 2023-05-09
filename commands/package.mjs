@@ -362,18 +362,17 @@ export function getCommand() {
             filename: `${packDir}/${compendiumName}.db`,
             autoload: true
         });
-
-        // Iterate over all entries in the db, writing them as individual YAML files
+        // Create output folder
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
-
+        
         // Load package manifests
         let documentType = "Unknown";
-
+        
         const knownWorldTypes = [ "actors", "cards", "combats", "drawings", "fog", "folders", "items",
-            "journal", "macros", "messages", "playlists", "scenes", "tables" ];
-
+        "journal", "macros", "messages", "playlists", "scenes", "tables" ];
+        
         if ( knownWorldTypes.includes(compendiumName) ) {
             documentType = compendiumName;
         }
@@ -387,7 +386,8 @@ export function getCommand() {
                 documentType = pack.type ?? pack.entity;
             }
         }
-
+        
+        // Iterate over all entries in the db, writing them as individual YAML files
         const docs = await db.find({});
         for (const doc of docs) {
             const name = doc.name ? `${getSafeFilename(doc.name)}_${doc._id}` : doc._id;
@@ -481,6 +481,11 @@ export function getCommand() {
         if ( (dbMode === "classic-level") && isFileLocked( packDir + "/LOCK") ) {
             console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
+        }
+        
+        // Create packDir if it doesn't exist already
+        if (!fs.existsSync(packDir)) {
+            fs.mkdirSync(packDir, {recursive: true});
         }
 
         console.log(`[${dbMode}] Packing ${chalk.blue(compendiumName)} from "${chalk.blue(inputDir)}" into "${chalk.blue(packDir)}"`);
