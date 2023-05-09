@@ -281,6 +281,9 @@ export function getCommand() {
             // If the file could not be opened, it is locked
             if (err.code === 'EBUSY') {
                 return true;
+            // If the file can't be found it's not locked
+            } else if (err.code === 'ENOENT') {
+                return false;
             } else {
                 throw err;
             }
