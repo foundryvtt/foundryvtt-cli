@@ -307,7 +307,7 @@ export function getCommand() {
             }
         }
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName && ( dbMode === "nedb" || usingDefaultDirectory)) {
+        if ( !compendiumName ) {
             console.error("No Compendium Name provided for the `unpack` action. Try again with `-n <name>`.");
             return;
         }
@@ -460,7 +460,7 @@ export function getCommand() {
         }
 
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName && ( dbMode === "nedb" || usingDefaultDirectory) ) {
+        if ( !compendiumName  ) {
             console.error(chalk.red(`No Compendium Name provided for the ${chalk.yellow(`pack`)} action. Try again with ${chalk.yellow(`-n <name>`)}.`));
             return;
         }
