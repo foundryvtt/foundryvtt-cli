@@ -390,15 +390,15 @@ export function getCommand() {
 
         const docs = await db.find({});
         for (const doc of docs) {
-            const name = doc.name ? `${doc.name.toLowerCase().replaceAll(" ", "_")}_${doc._id}` : doc._id;
+            const name = doc.name ? `${getSafeFilename(doc.name)}_${doc._id}` : doc._id;
             doc._key = `!${documentType}!${doc._id}`;
             let fileName;
             if ( argv.yaml ) {
-                fileName = getSafeFilename(`${outputDir}/${name}.yml`);
+                fileName = `${outputDir}/${name}.yml`;
                 fs.writeFileSync(fileName, yaml.dump(doc));
             }
             else {
-                fileName = getSafeFilename(`${outputDir}/${name}.json`);
+                fileName = `${outputDir}/${name}.json`;
                 fs.writeFileSync(fileName, JSON.stringify(doc, null, 2));
             }
             console.log(`Wrote ${chalk.blue(fileName)}`);
@@ -420,20 +420,21 @@ export function getCommand() {
         const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
         const keys = await db.keys().all();
 
-        // Iterate over all entries in the db, writing them as individual YAML files
+        // Create output folder
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
+        // Iterate over all entries in the db, writing them as individual YAML files
         for await (const [key, value] of db.iterator()) {
-            const name = value.name ? `${value.name.toLowerCase().replaceAll(" ", "_")}_${value._id}` : key;
+            const name = value.name ? `${getSafeFilename(value.name)}_${value._id}` : key;
             value._key = key;
             let fileName;
             if ( argv.yaml ) {
-                fileName = getSafeFilename(`${outputDir}/${name}.yml`);
+                fileName = `${outputDir}/${name}.yml`;
                 fs.writeFileSync(fileName, yaml.dump(value));
             }
             else {
-                fileName = getSafeFilename(`${outputDir}/${name}.json`);
+                fileName = `${outputDir}/${name}.json`;
                 fs.writeFileSync(fileName, JSON.stringify(value, null, 2));
             }
             console.log(`Wrote ${chalk.blue(fileName)}`);
