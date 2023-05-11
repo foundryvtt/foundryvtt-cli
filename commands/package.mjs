@@ -281,6 +281,9 @@ export function getCommand() {
             // If the file could not be opened, it is locked
             if (err.code === 'EBUSY') {
                 return true;
+            // If the file can't be found it's not locked
+            } else if (err.code === 'ENOENT') {
+                return false;
             } else {
                 throw err;
             }
@@ -298,16 +301,15 @@ export function getCommand() {
     async function _handleUnpack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
         const usingDefaultDirectory = (!argv.outputDirectory || !argv.inputDirectory);
-        const typeDir = ""
+        const typeDir = usingDefaultDirectory ? currentPackageType.toLowerCase() + "s" : "";
         if (usingDefaultDirectory) {
-            typeDir = currentPackageType.toLowerCase() + "s";
             if (!currentPackageId) {
                 console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
                 return;
             }
         }
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName && ( dbMode === "nedb" || usingDefaultDirectory)) {
+        if ( !compendiumName ) {
             console.error("No Compendium Name provided for the `unpack` action. Try again with `-n <name>`.");
             return;
         }
@@ -359,18 +361,17 @@ export function getCommand() {
             filename: `${packDir}/${compendiumName}.db`,
             autoload: true
         });
-
-        // Iterate over all entries in the db, writing them as individual YAML files
+        // Create output folder
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
-
+        
         // Load package manifests
         let documentType = "Unknown";
-
+        
         const knownWorldTypes = [ "actors", "cards", "combats", "drawings", "fog", "folders", "items",
-            "journal", "macros", "messages", "playlists", "scenes", "tables" ];
-
+        "journal", "macros", "messages", "playlists", "scenes", "tables" ];
+        
         if ( knownWorldTypes.includes(compendiumName) ) {
             documentType = compendiumName;
         }
@@ -384,18 +385,19 @@ export function getCommand() {
                 documentType = pack.type ?? pack.entity;
             }
         }
-
+        
+        // Iterate over all entries in the db, writing them as individual YAML files
         const docs = await db.find({});
         for (const doc of docs) {
-            const name = doc.name ? `${doc.name.toLowerCase().replaceAll(" ", "_")}_${doc._id}` : doc._id;
+            const name = doc.name ? `${getSafeFilename(doc.name)}_${doc._id}` : doc._id;
             doc._key = `!${documentType}!${doc._id}`;
             let fileName;
             if ( argv.yaml ) {
-                fileName = getSafeFilename(`${outputDir}/${name}.yml`);
+                fileName = `${outputDir}/${name}.yml`;
                 fs.writeFileSync(fileName, yaml.dump(doc));
             }
             else {
-                fileName = getSafeFilename(`${outputDir}/${name}.json`);
+                fileName = `${outputDir}/${name}.json`;
                 fs.writeFileSync(fileName, JSON.stringify(doc, null, 2));
             }
             console.log(`Wrote ${chalk.blue(fileName)}`);
@@ -417,20 +419,21 @@ export function getCommand() {
         const db = new ClassicLevel(packDir, {keyEncoding: "utf8", valueEncoding: "json"});
         const keys = await db.keys().all();
 
-        // Iterate over all entries in the db, writing them as individual YAML files
+        // Create output folder
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
+        // Iterate over all entries in the db, writing them as individual YAML files
         for await (const [key, value] of db.iterator()) {
-            const name = value.name ? `${value.name.toLowerCase().replaceAll(" ", "_")}_${value._id}` : key;
+            const name = value.name ? `${getSafeFilename(value.name)}_${value._id}` : key;
             value._key = key;
             let fileName;
             if ( argv.yaml ) {
-                fileName = getSafeFilename(`${outputDir}/${name}.yml`);
+                fileName = `${outputDir}/${name}.yml`;
                 fs.writeFileSync(fileName, yaml.dump(value));
             }
             else {
-                fileName = getSafeFilename(`${outputDir}/${name}.json`);
+                fileName = `${outputDir}/${name}.json`;
                 fs.writeFileSync(fileName, JSON.stringify(value, null, 2));
             }
             console.log(`Wrote ${chalk.blue(fileName)}`);
@@ -450,9 +453,8 @@ export function getCommand() {
     async function _handlePack(argv) {
         const dbMode = argv.nedb ? "nedb" : "classic-level";
         const usingDefaultDirectory = (!argv.outputDirectory || !argv.inputDirectory);
-        const typeDir = ""
+        const typeDir = usingDefaultDirectory ? currentPackageType.toLowerCase() + "s" : "";
         if (usingDefaultDirectory) {
-            typeDir = currentPackageType.toLowerCase() + "s";
             if (!currentPackageId) {
                 console.error(chalk.red("No package ID is currently set. Use `package workon <id>` to set it."));
                 return;
@@ -460,7 +462,7 @@ export function getCommand() {
         }
 
         const compendiumName = argv.compendiumName ?? argv.value;
-        if ( !compendiumName && ( dbMode === "nedb" || usingDefaultDirectory) ) {
+        if ( !compendiumName  ) {
             console.error(chalk.red(`No Compendium Name provided for the ${chalk.yellow(`pack`)} action. Try again with ${chalk.yellow(`-n <name>`)}.`));
             return;
         }
@@ -477,6 +479,11 @@ export function getCommand() {
         if ( (dbMode === "classic-level") && isFileLocked( packDir + "/LOCK") ) {
             console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
+        }
+        
+        // Create packDir if it doesn't exist already
+        if (!fs.existsSync(packDir)) {
+            fs.mkdirSync(packDir, {recursive: true});
         }
 
         console.log(`[${dbMode}] Packing ${chalk.blue(compendiumName)} from "${chalk.blue(inputDir)}" into "${chalk.blue(packDir)}"`);
