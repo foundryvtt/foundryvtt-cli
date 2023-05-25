@@ -73,7 +73,7 @@ Output the current working package, if any.
 
 #### Workon
 ```bash
-fvtt package workon "1001-fish" --type "module"
+fvtt package workon "1001-fish" --type "Module"
 ```
 Swaps to working on a specific package, eliminating the need to pass `--type` and `--id` to other package commands.
 
