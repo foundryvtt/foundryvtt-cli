@@ -550,8 +550,7 @@ export function getCommand() {
         // Compact the database
         db.stopAutocompaction();
         await new Promise(resolve => {
-            db.once("compaction.done", resolve);
-            db.compactDatafile();
+            db.compactDatafile(resolve);
         });
     }
 
