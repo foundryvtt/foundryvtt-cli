@@ -257,7 +257,7 @@ export function getCommand() {
             }
         }
 
-        game.packages = [...game.modules, ...game.systems, ...game.worlds];
+        game.packages = new Map([...game.modules, ...game.systems, ...game.worlds]);
 
         return game;
     }
@@ -365,27 +365,27 @@ export function getCommand() {
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
-        
+
         // Load package manifests
         let documentType = "Unknown";
-        
+
         const knownWorldTypes = [ "actors", "cards", "combats", "drawings", "fog", "folders", "items",
         "journal", "macros", "messages", "playlists", "scenes", "tables" ];
-        
+
         if ( knownWorldTypes.includes(compendiumName) ) {
             documentType = compendiumName;
         }
         else {
             const game = discoverPackageDirectory(argv);
             // Get all packs from world, system, and modules
-            const packs = [...game.modules, ...game.systems, ...game.worlds].map(p => p.packs).flat();
+            const packs = Object.values(game.packages).map(p => p.packs).flat();
             // Find the pack with the matching name
             const pack = packs.find(p => p.name === compendiumName);
             if ( pack ) {
                 documentType = pack.type ?? pack.entity;
             }
         }
-        
+
         // Iterate over all entries in the db, writing them as individual YAML files
         const docs = await db.find({});
         for (const doc of docs) {
@@ -480,7 +480,7 @@ export function getCommand() {
             console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
         }
-        
+
         // Create packDir if it doesn't exist already
         if (!fs.existsSync(packDir)) {
             fs.mkdirSync(packDir, {recursive: true});
