@@ -378,7 +378,7 @@ export function getCommand() {
         else {
             const game = discoverPackageDirectory(argv);
             // Get all packs from world, system, and modules
-            const packs = Object.values(game.packages).map(p => p.packs).flat();
+            const packs = Object.values(game.packages).flatMap(p => p.packs);
             // Find the pack with the matching name
             const pack = packs.find(p => p.name === compendiumName);
             if ( pack ) {
