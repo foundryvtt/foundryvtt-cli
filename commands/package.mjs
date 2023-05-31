@@ -182,7 +182,7 @@ export function getCommand() {
      * @returns {string}                The sanitized filename
      */
     function getSafeFilename(filename) {
-        return filename.replace(/[^a-zA-Z0-9]/g, '_');
+        return filename.replace(/[^a-zA-Z0-9а-яА-Я]/g, '_');
     }
 
     /* -------------------------------------------- */
