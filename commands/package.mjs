@@ -589,6 +589,31 @@ export function getCommand() {
             }
         }
         await batch.write();
+
+        if (seenKeys.size) {
+            await _compactClassicLevel(db);
+        }
+
         await db.close();
+    }
+
+    /**
+     * Flushes the log of the given database to create compressed binary tables.
+     * @param {ClassicLevel} db The database to compress.
+     * @returns {Promise<void>}
+     * @private
+     */
+    async function _compactClassicLevel(db) {
+        const forwardIterator = db.keys({ limit: 1, fillCache: false });
+        const firstKey = await forwardIterator.next();
+        await forwardIterator.close();
+
+        const backwardIterator = db.keys({ limit: 1, fillCache: false });
+        const lastKey = await backwardIterator.next();
+        await backwardIterator.close();
+
+        if (firstKey && lastKey) {
+            return db.compactRange(firstKey, lastKey, { keyEncoding: "utf8" });
+        }
     }
 }
