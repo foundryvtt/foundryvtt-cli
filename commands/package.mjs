@@ -48,7 +48,7 @@ export function getCommand() {
             });
 
             yargs.option("inputDirectory", {
-                alias: "id",
+                alias: "in",
                 describe: "The directory to read from, for Pack based Actions.",
                 type: "string"
             });
