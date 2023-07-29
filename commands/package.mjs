@@ -519,25 +519,31 @@ export function getCommand() {
         const files = fs.readdirSync(inputDir);
         const seenKeys = new Set();
         for ( const file of files ) {
-            const fileContents = fs.readFileSync(path.join(inputDir, file));
-            const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
-            const key = value._key;
-            // If the key starts with !folders, we should skip packing it as nedb doesn't support folders
-            if ( key.startsWith("!folders") ) continue;
+			try {
+				const fileContents = fs.readFileSync(path.join(inputDir, file));
+				const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
+				const key = value._key;
+				// If the key starts with !folders, we should skip packing it as nedb doesn't support folders
+				if ( key.startsWith("!folders") ) continue;
 
-            delete value._key;
-            seenKeys.add(value._id);
+				delete value._key;
+				seenKeys.add(value._id);
 
-            // If key already exists, update it
-            const existing = await db.findOne({_id: value._id});
-            if ( existing ) {
-                await db.update({_id: key}, value);
-                console.log(`Updated ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
-            }
-            else {
-                await db.insert(value);
-                console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
-            }
+				// If key already exists, update it
+				const existing = await db.findOne({_id: value._id});
+				if ( existing ) {
+					await db.update({_id: key}, value);
+					console.log(`Updated ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+				}
+				else {
+					await db.insert(value);
+					console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+				}
+			}
+            catch (error) { 
+				throw `Failed to parse ${chalk.red(file)}: ${error}`;
+			}
+            
         }
 
         // Remove any entries which were not updated
@@ -571,14 +577,20 @@ export function getCommand() {
         // Iterate over all YAML files in the input directory, writing them to the db
         const files = fs.readdirSync(inputDir);
         const seenKeys = new Set();
-        for ( const file of files ) {
-            const fileContents = fs.readFileSync(path.join(inputDir, file));
-            const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
-            const key = value._key;
-            delete value._key;
-            seenKeys.add(key);
-            batch.put(key, value);
-            console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+        for (const file of files) {
+            try {
+                const fileContents = fs.readFileSync(path.join(inputDir, file));
+                const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
+                const key = value._key;
+                delete value._key;
+                seenKeys.add(key);
+                batch.put(key, value);
+                console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+            }
+            catch (error) {
+                throw `Failed to parse ${chalk.red(file)}: ${error}`;
+            }
+           
         }
 
         // Remove any entries in the db that are not in the input directory
