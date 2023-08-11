@@ -365,13 +365,13 @@ export function getCommand() {
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
-        
+
         // Load package manifests
         let documentType = "Unknown";
-        
+
         const knownWorldTypes = [ "actors", "cards", "combats", "drawings", "fog", "folders", "items",
         "journal", "macros", "messages", "playlists", "scenes", "tables" ];
-        
+
         if ( knownWorldTypes.includes(compendiumName) ) {
             documentType = compendiumName;
         }
@@ -385,7 +385,7 @@ export function getCommand() {
                 documentType = pack.type ?? pack.entity;
             }
         }
-        
+
         // Iterate over all entries in the db, writing them as individual YAML files
         const docs = await db.find({});
         for (const doc of docs) {
@@ -480,7 +480,7 @@ export function getCommand() {
             console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
         }
-        
+
         // Create packDir if it doesn't exist already
         if (!fs.existsSync(packDir)) {
             fs.mkdirSync(packDir, {recursive: true});
@@ -590,7 +590,7 @@ export function getCommand() {
         }
         await batch.write();
 
-        if (seenKeys.size) {
+        if ( seenKeys.size ) {
             await _compactClassicLevel(db);
         }
 
@@ -608,11 +608,11 @@ export function getCommand() {
         const firstKey = await forwardIterator.next();
         await forwardIterator.close();
 
-        const backwardIterator = db.keys({ limit: 1, fillCache: false });
+        const backwardIterator = db.keys({ limit: 1, reverse: true, fillCache: false });
         const lastKey = await backwardIterator.next();
         await backwardIterator.close();
 
-        if (firstKey && lastKey) {
+        if ( firstKey && lastKey ) {
             return db.compactRange(firstKey, lastKey, { keyEncoding: "utf8" });
         }
     }
