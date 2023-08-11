@@ -365,13 +365,13 @@ export function getCommand() {
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, {recursive: true});
         }
-        
+
         // Load package manifests
         let documentType = "Unknown";
-        
+
         const knownWorldTypes = [ "actors", "cards", "combats", "drawings", "fog", "folders", "items",
         "journal", "macros", "messages", "playlists", "scenes", "tables" ];
-        
+
         if ( knownWorldTypes.includes(compendiumName) ) {
             documentType = compendiumName;
         }
@@ -385,7 +385,7 @@ export function getCommand() {
                 documentType = pack.type ?? pack.entity;
             }
         }
-        
+
         // Iterate over all entries in the db, writing them as individual YAML files
         const docs = await db.find({});
         for (const doc of docs) {
@@ -480,7 +480,7 @@ export function getCommand() {
             console.error(chalk.red(`The pack "${chalk.blue(packDir)}" is currently in use by Foundry VTT. Please close Foundry VTT and try again.`));
             return;
         }
-        
+
         // Create packDir if it doesn't exist already
         if (!fs.existsSync(packDir)) {
             fs.mkdirSync(packDir, {recursive: true});
@@ -539,11 +539,9 @@ export function getCommand() {
                     await db.insert(value);
                     console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
                 }
+            } catch ( error ) {
+                throw new Error(`Failed to parse ${chalk.red(file)}: ${error}`);
             }
-            catch (error) { 
-                throw `Failed to parse ${chalk.red(file)}: ${error}`;
-            }
-            
         }
 
         // Remove any entries which were not updated
@@ -577,7 +575,7 @@ export function getCommand() {
         // Iterate over all YAML files in the input directory, writing them to the db
         const files = fs.readdirSync(inputDir);
         const seenKeys = new Set();
-        for (const file of files) {
+        for ( const file of files ) {
             try {
                 const fileContents = fs.readFileSync(path.join(inputDir, file));
                 const value = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
@@ -586,11 +584,9 @@ export function getCommand() {
                 seenKeys.add(key);
                 batch.put(key, value);
                 console.log(`Packed ${chalk.blue(value._id)}${chalk.blue(value.name ? ` (${value.name})` : "")}`);
+            } catch ( error ) {
+                throw new Error(`Failed to parse ${chalk.red(file)}: ${error}`);
             }
-            catch (error) {
-                throw `Failed to parse ${chalk.red(file)}: ${error}`;
-            }
-           
         }
 
         // Remove any entries in the db that are not in the input directory
