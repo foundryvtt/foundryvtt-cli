@@ -1,0 +1,14 @@
+# IDE
+.idea/
+.nova/
+.vs/
+.vscode/
+*.code-workspace
+*.iml
+
+# GH Actions
+.github
+
+# Code Style
+.editorconfig
+.eslintrc.json

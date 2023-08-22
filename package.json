@@ -24,5 +24,9 @@
     "nedb-core": "^3.0.6",
     "nedb-promises": "^6.2.1",
     "yargs": "^17.7.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.47.0",
+    "eslint-plugin-jsdoc": "^46.4.6"
   }
 }
