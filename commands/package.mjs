@@ -386,10 +386,10 @@ function determinePaths(argv, operation) {
 
   let pack = operation === "pack" ? argv.outputDirectory : argv.inputDirectory;
   let source = operation === "pack" ? argv.inputDirectory : argv.outputDirectory;
-  pack ??= path.posix.join(dataPath, "Data", typeDir, currentPackageId, "packs", compendiumName);
-  source ??= path.posix.join(pack, "_source");
+  pack ??= path.join(dataPath, "Data", typeDir, currentPackageId, "packs", compendiumName);
+  source ??= path.join(pack, "_source");
   if ( argv.nedb ) pack += ".db";
-  return { source: path.posix.resolve(normalizePath(source)), pack: path.posix.resolve(normalizePath(pack)) };
+  return { source: path.resolve(normalizePath(source)), pack: path.resolve(normalizePath(pack)) };
 }
 
 /* -------------------------------------------- */
@@ -519,7 +519,7 @@ async function handleUnpack(argv) {
     return;
   }
 
-  if ( !argv.nedb && isFileLocked(path.posix.join(pack, "LOCK")) ) {
+  if ( !argv.nedb && isFileLocked(path.join(pack, "LOCK")) ) {
     console.error(chalk.red(`The pack "${chalk.blue(pack)}" is currently in use by Foundry VTT. `
       + "Please close Foundry VTT and try again."));
     process.exitCode = 1;
@@ -573,10 +573,10 @@ async function unpackNedb(pack, outputDir, argv) {
     await unpackDoc(doc, TYPE_COLLECTION_MAP[documentType]);
     let fileName;
     if ( argv.yaml ) {
-      fileName = path.posix.join(outputDir, `${name}.yml`);
+      fileName = path.join(outputDir, `${name}.yml`);
       fs.writeFileSync(fileName, yaml.dump(doc));
     } else {
-      fileName = path.posix.join(outputDir, `${name}.json`);
+      fileName = path.join(outputDir, `${name}.json`);
       fs.writeFileSync(fileName, JSON.stringify(doc, null, 2) + "\n");
     }
     console.log(`Wrote ${chalk.blue(fileName)}`);
@@ -614,10 +614,10 @@ async function unpackClassicLevel(packDir, outputDir, argv) {
     await unpackDoc(doc, collection);
     let fileName;
     if ( argv.yaml ) {
-      fileName = path.posix.join(outputDir, `${name}.yml`);
+      fileName = path.join(outputDir, `${name}.yml`);
       fs.writeFileSync(fileName, yaml.dump(doc));
     } else {
-      fileName = path.posix.join(outputDir, `${name}.json`);
+      fileName = path.join(outputDir, `${name}.json`);
       fs.writeFileSync(fileName, JSON.stringify(doc, null, 2) + "\n");
     }
     console.log(`Wrote ${chalk.blue(fileName)}`);
@@ -643,7 +643,7 @@ async function handlePack(argv) {
     return;
   }
 
-  if ( !argv.nedb && isFileLocked(path.posix.join(pack, "LOCK")) ) {
+  if ( !argv.nedb && isFileLocked(path.join(pack, "LOCK")) ) {
     console.error(chalk.red(`The pack "${chalk.blue(pack)}" is currently in use by Foundry VTT. `
       + "Please close Foundry VTT and try again."));
     process.exitCode = 1;
@@ -689,7 +689,7 @@ async function packNedb(pack, inputDir) {
   // Iterate over all files in the input directory, writing them to the DB.
   for ( const file of fs.readdirSync(inputDir) ) {
     try {
-      const fileContents = fs.readFileSync(path.posix.join(inputDir, file));
+      const fileContents = fs.readFileSync(path.join(inputDir, file));
       const doc = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
       const key = doc._key;
       const [, collection] = key.split("!");
@@ -735,7 +735,7 @@ async function packClassicLevel(packDir, inputDir) {
   // Iterate over all files in the input directory, writing them to the DB.
   for ( const file of fs.readdirSync(inputDir) ) {
     try {
-      const fileContents = fs.readFileSync(path.posix.join(inputDir, file));
+      const fileContents = fs.readFileSync(path.join(inputDir, file));
       const doc = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
       const [, collection] = doc._key.split("!");
       await packDoc(doc, collection);
