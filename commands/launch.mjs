@@ -1,7 +1,6 @@
 import Config from "../config.mjs";
 import { spawn } from "child_process";
 import path from "path";
-import { normalizePath } from "../utils/utils.mjs";
 
 /**
  * Get the command object for the launch command
@@ -74,7 +73,7 @@ export function getCommand() {
 
       // Launch Foundry VTT
       const foundry = spawn("node", [
-        normalizePath(path.join(installPath, "resources", "app", "main.js")),
+        path.normalize(path.join(installPath, "resources", "app", "main.js")),
         `--dataPath=${dataPath}`,
         `--port=${port}`,
         demo ? "--demo" : "",

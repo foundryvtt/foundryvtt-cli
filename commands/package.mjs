@@ -5,7 +5,6 @@ import path from "path";
 import fs from "fs";
 import chalk from "chalk";
 import Datastore from "nedb-promises";
-import { normalizePath } from "../utils/utils.mjs";
 
 /**
  * @typedef {"Module"|"System"|"World"} PackageType
@@ -256,7 +255,7 @@ function readPackageManifests(dataPath, type, { verbose=false }={}) {
   const map = new Map();
 
   for ( const file of fs.readdirSync(dir, { withFileTypes: true }) ) {
-    const manifestPath = normalizePath(`${dir}/${file.name}/${typeLC}.json`);
+    const manifestPath = path.normalize(`${dir}/${file.name}/${typeLC}.json`);
     try {
       const data = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
       data.type = type;
@@ -389,7 +388,7 @@ function determinePaths(argv, operation) {
   pack ??= path.join(dataPath, "Data", typeDir, currentPackageId, "packs", compendiumName);
   source ??= path.join(pack, "_source");
   if ( argv.nedb ) pack += ".db";
-  return { source: path.resolve(normalizePath(source)), pack: path.resolve(normalizePath(pack)) };
+  return { source: path.resolve(path.normalize(source)), pack: path.resolve(path.normalize(pack)) };
 }
 
 /* -------------------------------------------- */
