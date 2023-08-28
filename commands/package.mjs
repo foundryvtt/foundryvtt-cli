@@ -698,7 +698,8 @@ async function packNedb(pack, inputDir) {
       await db.insert(doc);
       console.log(`Packed ${chalk.blue(doc._id)}${chalk.blue(doc.name ? ` (${doc.name})` : "")}`);
     } catch ( err ) {
-      throw new Error(`Failed to parse ${chalk.red(file)}: ${err}`);
+      console.error(`Failed to parse ${chalk.red(file)}. See error below.`);
+      throw err;
     }
   }
 
@@ -740,7 +741,8 @@ async function packClassicLevel(packDir, inputDir) {
       await packDoc(doc, collection);
       console.log(`Packed ${chalk.blue(doc._id)}${chalk.blue(doc.name ? ` (${doc.name})` : "")}`);
     } catch ( err ) {
-      throw new Error(`Failed to parse ${chalk.red(file)}: ${err}`);
+      console.error(`Failed to parse ${chalk.red(file)}. See error below.`);
+      throw err;
     }
   }
 
