@@ -1,4 +1,14 @@
-## 1.0.0
+## 1.0.0-rc.2
+
+### Fixes
+ - (DJ4ddi) Fixed path name resolution on Windows.
+ - Fixed compendium name not being appropriately appended to --in or --out options depending on operation.
+
+### Improvements
+ - (DJ4ddi) Added minimum node engine version.
+ - (DJ4ddi) Re-throw parse errors to provide stack trace output in the console.
+
+## 1.0.0-rc.1
 
 ### Fixes
  - (DJ4ddi) Log more specific errors when an operation fails.
