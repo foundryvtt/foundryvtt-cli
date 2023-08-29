@@ -385,7 +385,8 @@ function determinePaths(argv, operation) {
 
   let pack = operation === "pack" ? argv.outputDirectory : argv.inputDirectory;
   let source = operation === "pack" ? argv.inputDirectory : argv.outputDirectory;
-  pack ??= path.join(dataPath, "Data", typeDir, currentPackageId, "packs", compendiumName);
+  if ( pack ) pack = path.join(pack, compendiumName);
+  else pack = path.join(dataPath, "Data", typeDir, currentPackageId, "packs", compendiumName);
   source ??= path.join(pack, "_source");
   if ( argv.nedb ) pack += ".db";
   return { source: path.resolve(path.normalize(source)), pack: path.resolve(path.normalize(pack)) };
