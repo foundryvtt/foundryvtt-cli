@@ -1,3 +1,9 @@
+## 1.0.0-rc.3
+
+### Improvements
+ - (phenomen) Added cyrillic characters to the set of filesystem-safe characters that a Document name can be written as.
+ - Factored out `extractPack` and `compilePack` functionality into an external API.
+
 ## 1.0.0-rc.2
 
 ### Fixes

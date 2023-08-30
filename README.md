@@ -116,5 +116,52 @@ npm run build
 npm link
 ```
 
+## API
+
+Certain internal functionality of the CLI is exposed as an API that can be imported into other projects.
+
+### Example Usage
+
+```js
+import { compilePack, extractPack } from "@foundryvtt/foundryvtt-cli";
+
+// Extract a NeDB compendium pack.
+await extractpack("mymodule/packs/actors.db", "mymodule/packs/src/actors", { nedb: true });
+
+// Compile a LevelDB compendium pack.
+await compilePack("mymodule/packs/src/actors", "mymodule/packs/actors");
+```
+
+### `compilePack(src: string, dest: string, options?: object): Promise<void>`
+
+Compile source files into a compendium pack.
+
+#### Parameters
+
+* **src:** *string* The directory containing the source files.
+* **dest:** *string* The target compendium pack.
+* **options:** *object*
+  * **nedb:** *boolean = false* Whether to operate on a NeDB database, otherwise a LevelDB database is assumed.
+  * **yaml:** *boolean = false* Whether the source files in YAML format, otherwise JSON is assumed.
+  * **log:** *boolean = false* Whether to log operation progress to the console.
+  * **recursive:** *boolean = false* Whether to recurse into child directories under **src**, otherwise only source files located directly under **src** will be used.
+  * **transformEntry:** *(entry: object): Promise<false|void>* A function that is called on every entry. Returning *false* indicates that the entry should be discarded.
+
+### `extractPack(src: string, dest: string, options?: object): Promise<void>`
+
+Extract the contents of a compendium pack into individual source files for each primary Document.
+
+#### Parameters
+
+* **src:** *string* The source compendium pack.
+* **dest:** *string* The directory to write the extracted files into.
+* **options:** *object*
+    * **nedb:** *boolean = false* Whether to operate on a NeDB database, otherwise a LevelDB database is assumed.
+    * **yaml:** *boolean = false* Whether the source files in YAML format, otherwise JSON is assumed.
+    * **log:** *boolean = false* Whether to log operation progress to the console.
+    * **documentType:** *string* For NeDB operations, a **documentType** must be provided. This should be the same as the pack's *type* field in the *module.json* or *system.json*.
+    * **transformEntry:** *(entry: object): Promise<false|void>* A function that is called on every entry. Returning *false* indicates that the entry should be discarded.
+    * **transformName:** *(entry: object): Promise<string|void>* A function that is called on every entry. The value returned from this will be used as the entry's filename. If nothing is returned, an auto-generated name will be used instead.
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

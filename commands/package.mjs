@@ -1,20 +1,11 @@
 import Config from "../config.mjs";
-import { ClassicLevel } from "classic-level";
-import yaml from "js-yaml";
 import path from "path";
 import fs from "fs";
 import chalk from "chalk";
-import Datastore from "nedb-promises";
+import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mjs";
 
 /**
  * @typedef {"Module"|"System"|"World"} PackageType
- */
-
-/**
- * @typedef {
- *   "Actor"|"Cards"|"ChatMessage"|"Combat"|"FogExploration"|"Folder"|"Item"|"JournalEntry"|"Macro"|"Playlist"|
- *   "RollTable"|"Scene"|"Setting"|"User"
- * } DocumentType
  */
 
 /**
@@ -33,75 +24,6 @@ import Datastore from "nedb-promises";
  * @property {boolean} [verbose]                        Whether to output verbose logging.
  * @property {boolean} [nedb]                           Use NeDB instead of ClassicLevel for database operations.
  */
-
-/**
- * A mapping of primary document types to collection names.
- * @type {Record<string, string>}
- */
-const TYPE_COLLECTION_MAP = {
-  Actor: "actors",
-  Adventure: "adventures",
-  Cards: "cards",
-  ChatMessage: "messages",
-  Combat: "combats",
-  FogExploration: "fog",
-  Folder: "folders",
-  Item: "items",
-  JournalEntry: "journal",
-  Macro: "macros",
-  Playlist: "playlists",
-  RollTable: "tables",
-  Scene: "scenes",
-  Setting: "settings",
-  User: "users"
-};
-
-/**
- * A flattened view of the Document hierarchy. The type of the value determines what type of collection it is. Arrays
- * represent embedded collections, while objects represent embedded documents.
- * @type {Record<string, Record<string, object|Array>>}
- */
-const HIERARCHY = {
-  actors: {
-    items: [],
-    effects: []
-  },
-  cards: {
-    cards: []
-  },
-  combats: {
-    combatants: []
-  },
-  delta: {
-    items: [],
-    effects: []
-  },
-  items: {
-    effects: []
-  },
-  journal: {
-    pages: []
-  },
-  playlists: {
-    sounds: []
-  },
-  tables: {
-    results: []
-  },
-  tokens: {
-    delta: {}
-  },
-  scenes: {
-    drawings: [],
-    tokens: [],
-    lights: [],
-    notes: [],
-    sounds: [],
-    templates: [],
-    tiles: [],
-    walls: []
-  }
-};
 
 /**
  * The working package ID.
@@ -216,28 +138,6 @@ export function getCommand() {
 
 /* -------------------------------------------- */
 /*  Helpers                                     */
-/* -------------------------------------------- */
-
-/**
- * Replace all non-alphanumeric characters with an underscore in a filename
- * @param {string} filename         The filename to sanitize
- * @returns {string}                The sanitized filename
- */
-function getSafeFilename(filename) {
-  return filename.replace(/[^a-zA-Z0-9]/g, '_');
-}
-
-/* -------------------------------------------- */
-
-/**
- * Join non-blank key parts.
- * @param {...string} args  Key parts.
- * @returns {string}
- */
-function keyJoin(...args) {
-  return args.filter(_ => _).join(".");
-}
-
 /* -------------------------------------------- */
 
 /**
@@ -393,67 +293,6 @@ function determinePaths(argv, operation) {
 }
 
 /* -------------------------------------------- */
-
-/**
- * @callback HierarchyApplyCallback
- * @param {object} doc              The Document being operated on.
- * @param {string} collection       The Document's collection.
- * @param {object} [options]        Additional options supplied by the invocation on the level above this one.
- * @returns {Promise<object|void>}  Options to supply to the next level of the hierarchy.
- */
-
-/**
- * Wrap a function so that it can be applied recursively to a Document's hierarchy.
- * @param {HierarchyApplyCallback} fn  The function to wrap.
- * @returns {HierarchyApplyCallback}   The wrapped function.
- */
-function applyHierarchy(fn) {
-  const apply = async (doc, collection, options={}) => {
-    const newOptions = await fn(doc, collection, options);
-    for ( const [embeddedCollectionName, type] of Object.entries(HIERARCHY[collection] ?? {}) ) {
-      const embeddedValue = doc[embeddedCollectionName];
-      if ( Array.isArray(type) && Array.isArray(embeddedValue) ) {
-        for ( const embeddedDoc of embeddedValue ) await apply(embeddedDoc, embeddedCollectionName, newOptions);
-      }
-      else if ( embeddedValue ) await apply(embeddedValue, embeddedCollectionName, newOptions);
-    }
-  };
-  return apply;
-}
-
-/* -------------------------------------------- */
-
-/**
- * @callback HierarchyMapCallback
- * @param {any} entry          The element stored in the collection.
- * @param {string} collection  The collection name.
- * @returns {Promise<any>}
- */
-
-/**
- * Transform a Document's embedded collections by applying a function to them.
- * @param {object} doc               The Document being operated on.
- * @param {string} collection        The Document's collection.
- * @param {HierarchyMapCallback} fn  The function to invoke.
- */
-async function mapHierarchy(doc, collection, fn) {
-  for ( const [embeddedCollectionName, type] of Object.entries(HIERARCHY[collection] ?? {}) ) {
-    const embeddedValue = doc[embeddedCollectionName];
-    if ( Array.isArray(type) ) {
-      if ( Array.isArray(embeddedValue) ) {
-        doc[embeddedCollectionName] = await Promise.all(embeddedValue.map(entry => {
-          return fn(entry, embeddedCollectionName);
-        }));
-      }
-      else doc[embeddedCollectionName] = [];
-    } else {
-      if ( embeddedValue ) doc[embeddedCollectionName] = await fn(embeddedValue, embeddedCollectionName);
-      else doc[embeddedCollectionName] = null;
-    }
-  }
-}
-
-/* -------------------------------------------- */
 /*  Workon                                      */
 /* -------------------------------------------- */
 
@@ -519,111 +358,32 @@ async function handleUnpack(argv) {
     return;
   }
 
-  if ( !argv.nedb && isFileLocked(path.join(pack, "LOCK")) ) {
+  let documentType;
+  const { nedb, yaml } = argv;
+  if ( nedb ) {
+    documentType = determineDocumentType(pack, argv);
+    if ( !documentType ) {
+      process.exitCode = 1;
+      return;
+    }
+  }
+
+  if ( !nedb && isFileLocked(path.join(pack, "LOCK")) ) {
     console.error(chalk.red(`The pack "${chalk.blue(pack)}" is currently in use by Foundry VTT. `
       + "Please close Foundry VTT and try again."));
     process.exitCode = 1;
     return;
   }
 
-  // Create the output directory if it doesn't exist already.
-  fs.mkdirSync(source, { recursive: true });
-
-  const dbMode = argv.nedb ? "nedb" : "classic-level";
+  const dbMode = nedb ? "nedb" : "classic-level";
   console.log(`[${dbMode}] Unpacking "${chalk.blue(pack)}" to "${chalk.blue(source)}"`);
 
   try {
-    if ( argv.nedb ) await unpackNedb(pack, source, argv);
-    else await unpackClassicLevel(pack, source, argv);
+    await extractPack(pack, source, { nedb, yaml, documentType, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;
   }
-}
-
-/* -------------------------------------------- */
-
-/**
- * Load a NeDB compendium pack file and serialize the DB entries, each to their own file
- * @param {string} pack       The directory path to the pack
- * @param {string} outputDir  The directory path to write the serialized files
- * @param {CLIArgs} argv      The command-line arguments.
- * @returns {Promise<void>}
- */
-async function unpackNedb(pack, outputDir, argv) {
-  // Load the NeDB file.
-  const db = new Datastore({ filename: pack, autoload: true });
-  const documentType = determineDocumentType(pack, argv);
-  if ( !documentType ) {
-    process.exitCode = 1;
-    return;
-  }
-
-  const unpackDoc = applyHierarchy((doc, collection, { sublevelPrefix, idPrefix }={}) => {
-    const sublevel = keyJoin(sublevelPrefix, collection);
-    const id = keyJoin(idPrefix, doc._id);
-    doc._key = `!${sublevel}!${id}`;
-    return { sublevelPrefix: sublevel, idPrefix: id };
-  });
-
-  // Iterate over all entries in the db, writing them as individual files
-  const docs = await db.find({});
-  for ( const doc of docs ) {
-    const name = doc.name ? `${getSafeFilename(doc.name)}_${doc._id}` : doc._id;
-    await unpackDoc(doc, TYPE_COLLECTION_MAP[documentType]);
-    let fileName;
-    if ( argv.yaml ) {
-      fileName = path.join(outputDir, `${name}.yml`);
-      fs.writeFileSync(fileName, yaml.dump(doc));
-    } else {
-      fileName = path.join(outputDir, `${name}.json`);
-      fs.writeFileSync(fileName, JSON.stringify(doc, null, 2) + "\n");
-    }
-    console.log(`Wrote ${chalk.blue(fileName)}`);
-  }
-}
-
-/* -------------------------------------------- */
-
-/**
- * Load a Classic Level database and serialize the DB entries, each to their own file
- * @param {string} packDir    The directory path to the pack
- * @param {string} outputDir  The directory path to write the serialized files
- * @param {CLIArgs} argv      The command line arguments
- * @returns {Promise<void>}
- */
-async function unpackClassicLevel(packDir, outputDir, argv) {
-  // Load the directory as a ClassicLevel db
-  const db = new ClassicLevel(packDir, { keyEncoding: "utf8", valueEncoding: "json" });
-
-  const unpackDoc = applyHierarchy(async (doc, collection, { sublevelPrefix, idPrefix }={}) => {
-    const sublevel = keyJoin(sublevelPrefix, collection);
-    const id = keyJoin(idPrefix, doc._id);
-    doc._key = `!${sublevel}!${id}`;
-    await mapHierarchy(doc, collection, (embeddedId, embeddedCollectionName) => {
-      return db.get(`!${sublevel}.${embeddedCollectionName}!${id}.${embeddedId}`);
-    });
-    return { sublevelPrefix: sublevel, idPrefix: id };
-  });
-
-  // Iterate over all entries in the db, writing them as individual files
-  for await ( const [key, doc] of db.iterator() ) {
-    const [, collection, id] = key.split("!");
-    if ( collection.includes(".") ) continue; // This is not a primary document, skip it.
-    const name = doc.name ? `${getSafeFilename(doc.name)}_${id}` : key;
-    await unpackDoc(doc, collection);
-    let fileName;
-    if ( argv.yaml ) {
-      fileName = path.join(outputDir, `${name}.yml`);
-      fs.writeFileSync(fileName, yaml.dump(doc));
-    } else {
-      fileName = path.join(outputDir, `${name}.json`);
-      fs.writeFileSync(fileName, JSON.stringify(doc, null, 2) + "\n");
-    }
-    console.log(`Wrote ${chalk.blue(fileName)}`);
-  }
-
-  await db.close();
 }
 
 /* -------------------------------------------- */
@@ -643,138 +403,21 @@ async function handlePack(argv) {
     return;
   }
 
-  if ( !argv.nedb && isFileLocked(path.join(pack, "LOCK")) ) {
+  const { nedb } = argv;
+  if ( !nedb && isFileLocked(path.join(pack, "LOCK")) ) {
     console.error(chalk.red(`The pack "${chalk.blue(pack)}" is currently in use by Foundry VTT. `
       + "Please close Foundry VTT and try again."));
     process.exitCode = 1;
     return;
   }
 
-  // Create the classic level directory if it doesn't exist already
-  if ( !argv.nedb ) fs.mkdirSync(pack, { recursive: true });
-
-  const dbMode = argv.nedb ? "nedb" : "classic-level";
+  const dbMode = nedb ? "nedb" : "classic-level";
   console.log(`[${dbMode}] Packing "${chalk.blue(source)}" into "${chalk.blue(pack)}"`);
 
   try {
-    if ( argv.nedb ) await packNedb(pack, source);
-    else await packClassicLevel(pack, source);
+    await compilePack(source, pack, { nedb, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;
   }
-}
-
-/* -------------------------------------------- */
-
-/**
- * Read serialized files from a directory and write them to a NeDB file.
- * @param {string} pack      The directory path to the pack
- * @param {string} inputDir  The directory path to read the serialized files from
- * @returns {Promise<void>}
- * @throws Error             If any file failed to be serialized.
- */
-async function packNedb(pack, inputDir) {
-  // Delete the existing NeDB file if it exists.
-  try {
-    fs.unlinkSync(pack);
-  } catch ( err ) {
-    if ( err.code !== 'ENOENT' ) throw err;
-  }
-
-  // Create a new NeDB Datastore.
-  const db = Datastore.create(pack);
-  const packDoc = applyHierarchy(doc => delete doc._key);
-
-  // Iterate over all files in the input directory, writing them to the DB.
-  for ( const file of fs.readdirSync(inputDir) ) {
-    try {
-      const fileContents = fs.readFileSync(path.join(inputDir, file));
-      const doc = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
-      const key = doc._key;
-      const [, collection] = key.split("!");
-      // If the key starts with !folders, we should skip packing it as nedb doesn't support folders
-      if ( key.startsWith("!folders") ) continue;
-      await packDoc(doc, collection);
-      await db.insert(doc);
-      console.log(`Packed ${chalk.blue(doc._id)}${chalk.blue(doc.name ? ` (${doc.name})` : "")}`);
-    } catch ( err ) {
-      console.error(`Failed to parse ${chalk.red(file)}. See error below.`);
-      throw err;
-    }
-  }
-
-  // Compact the database
-  db.stopAutocompaction();
-  await new Promise(resolve => db.compactDatafile(resolve));
-}
-
-/* -------------------------------------------- */
-
-/**
- * Read serialized files from a directory and write them to a Classic Level database.
- * @param {string} packDir   The directory path to the pack
- * @param {string} inputDir  The directory path to read the serialized files from
- * @returns {Promise<void>}
- * @throws Error             If any file failed to be serialized.
- */
-async function packClassicLevel(packDir, inputDir) {
-  // Load the directory as a ClassicLevel DB.
-  const db = new ClassicLevel(packDir, { keyEncoding: "utf8", valueEncoding: "json" });
-  const batch = db.batch();
-  const seenKeys = new Set();
-
-  const packDoc = applyHierarchy(async (doc, collection) => {
-    const key = doc._key;
-    delete doc._key;
-    seenKeys.add(key);
-    const value = structuredClone(doc);
-    await mapHierarchy(value, collection, d => d._id);
-    batch.put(key, value);
-  });
-
-  // Iterate over all files in the input directory, writing them to the DB.
-  for ( const file of fs.readdirSync(inputDir) ) {
-    try {
-      const fileContents = fs.readFileSync(path.join(inputDir, file));
-      const doc = file.endsWith(".yml") ? yaml.load(fileContents) : JSON.parse(fileContents);
-      const [, collection] = doc._key.split("!");
-      await packDoc(doc, collection);
-      console.log(`Packed ${chalk.blue(doc._id)}${chalk.blue(doc.name ? ` (${doc.name})` : "")}`);
-    } catch ( err ) {
-      console.error(`Failed to parse ${chalk.red(file)}. See error below.`);
-      throw err;
-    }
-  }
-
-  // Remove any entries in the db that are not in the input directory
-  for ( const key of await db.keys().all() ) {
-    if ( !seenKeys.has(key) ) {
-      batch.del(key);
-      console.log(`Removed ${chalk.blue(key)}`);
-    }
-  }
-
-  await batch.write();
-  await compactClassicLevel(db);
-  await db.close();
-}
-
-/* -------------------------------------------- */
-
-/**
- * Flushes the log of the given database to create compressed binary tables.
- * @param {ClassicLevel} db The database to compress.
- * @returns {Promise<void>}
- */
-async function compactClassicLevel(db) {
-  const forwardIterator = db.keys({ limit: 1, fillCache: false });
-  const firstKey = await forwardIterator.next();
-  await forwardIterator.close();
-
-  const backwardIterator = db.keys({ limit: 1, reverse: true, fillCache: false });
-  const lastKey = await backwardIterator.next();
-  await backwardIterator.close();
-
-  if ( firstKey && lastKey ) return db.compactRange(firstKey, lastKey, { keyEncoding: "utf8" });
 }
