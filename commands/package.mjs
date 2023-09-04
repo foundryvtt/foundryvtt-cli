@@ -403,7 +403,7 @@ async function handlePack(argv) {
     return;
   }
 
-  const { nedb } = argv;
+  const { nedb, yaml } = argv;
   if ( !nedb && isFileLocked(path.join(pack, "LOCK")) ) {
     console.error(chalk.red(`The pack "${chalk.blue(pack)}" is currently in use by Foundry VTT. `
       + "Please close Foundry VTT and try again."));
@@ -415,7 +415,7 @@ async function handlePack(argv) {
   console.log(`[${dbMode}] Packing "${chalk.blue(source)}" into "${chalk.blue(pack)}"`);
 
   try {
-    await compilePack(source, pack, { nedb, log: true });
+    await compilePack(source, pack, { nedb, yaml, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;

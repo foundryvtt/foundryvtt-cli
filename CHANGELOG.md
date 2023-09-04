@@ -1,3 +1,8 @@
+## 1.0.0-rc.4
+
+### Fixes
+ - Fixed issues with packing/unpacking as YAML.
+
 ## 1.0.0-rc.3
 
 ### Improvements
