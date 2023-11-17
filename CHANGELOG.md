@@ -1,3 +1,8 @@
+## 1.0.1
+
+### Fixes
+ - Fixed issue with YAML serialization.
+
 ## 1.0.0
 
 ### Improvements
