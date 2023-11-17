@@ -158,6 +158,7 @@ Extract the contents of a compendium pack into individual source files for each 
 * **options:** *object*
     * **nedb:** *boolean = false* Whether to operate on a NeDB database, otherwise a LevelDB database is assumed.
     * **yaml:** *boolean = false* Whether the source files in YAML format, otherwise JSON is assumed.
+    * **yamlOptions** *object = {}* Options to pass to `yaml.dump`.
     * **log:** *boolean = false* Whether to log operation progress to the console.
     * **documentType:** *string* For NeDB operations, a **documentType** must be provided. This should be the same as the pack's *type* field in the *module.json* or *system.json*.
     * **transformEntry:** *(entry: object): Promise<false|void>* A function that is called on every entry. Returning *false* indicates that the entry should be discarded.
