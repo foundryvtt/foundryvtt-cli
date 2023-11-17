@@ -3,7 +3,7 @@
 ### Improvements
  - (Ryan Walder) Appropriately detect files with `.yaml` extensions as YAML files.
  - (Ryan Walder) Added the `yamlOptions` parameter to `extractPack` to allow configuring how YAML is serialized.
- - Added the `--recursive` command-line flag for pack operations that will recursive into subdirectories when finding source files.
+ - Added the `--recursive` command-line flag for pack operations that will recurse into subdirectories when finding source files.
  - Added the `jsonOptions` parameter to `extractPack` to allow configuring how JSON is serialized.
  - Removed unused `nedb-core` dependency.
 
