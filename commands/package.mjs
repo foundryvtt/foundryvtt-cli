@@ -23,6 +23,8 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  * @property {boolean} [yaml]                           Whether to use YAML instead of JSON for serialization.
  * @property {boolean} [verbose]                        Whether to output verbose logging.
  * @property {boolean} [nedb]                           Use NeDB instead of ClassicLevel for database operations.
+ * @property {boolean} [recursive]                      When packing, recurse down through all directories in the input
+ *                                                      directory to find source files.
  */
 
 /**
@@ -107,6 +109,11 @@ export function getCommand() {
 
       yargs.options("nedb", {
         describe: "Whether to use NeDB instead of ClassicLevel for database operations.",
+        type: "boolean"
+      });
+
+      yargs.options("recursive", {
+        describe: "When packing, recurse down through all directories in the input directory to find source files.",
         type: "boolean"
       });
 
@@ -403,7 +410,7 @@ async function handlePack(argv) {
     return;
   }
 
-  const { nedb, yaml } = argv;
+  const { nedb, yaml, recursive } = argv;
   if ( !nedb && isFileLocked(path.join(pack, "LOCK")) ) {
     console.error(chalk.red(`The pack "${chalk.blue(pack)}" is currently in use by Foundry VTT. `
       + "Please close Foundry VTT and try again."));
@@ -415,7 +422,7 @@ async function handlePack(argv) {
   console.log(`[${dbMode}] Packing "${chalk.blue(source)}" into "${chalk.blue(pack)}"`);
 
   try {
-    await compilePack(source, pack, { nedb, yaml, log: true });
+    await compilePack(source, pack, { nedb, yaml, recursive, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;
