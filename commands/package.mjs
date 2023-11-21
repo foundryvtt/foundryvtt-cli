@@ -25,6 +25,7 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  * @property {boolean} [nedb]                           Use NeDB instead of ClassicLevel for database operations.
  * @property {boolean} [recursive]                      When packing, recurse down through all directories in the input
  *                                                      directory to find source files.
+ * @property {boolean} [clean]                          When unpacking, delete the destination directory first.
  */
 
 /**
@@ -107,13 +108,20 @@ export function getCommand() {
         type: "boolean"
       });
 
-      yargs.options("nedb", {
+      yargs.option("nedb", {
         describe: "Whether to use NeDB instead of ClassicLevel for database operations.",
         type: "boolean"
       });
 
-      yargs.options("recursive", {
+      yargs.option("recursive", {
+        alias: "r",
         describe: "When packing, recurse down through all directories in the input directory to find source files.",
+        type: "boolean"
+      });
+
+      yargs.option("clean", {
+        alias: "c",
+        describe: "When unpacking, delete the destination directory first.",
         type: "boolean"
       });
 
@@ -366,7 +374,7 @@ async function handleUnpack(argv) {
   }
 
   let documentType;
-  const { nedb, yaml } = argv;
+  const { nedb, yaml, clean } = argv;
   if ( nedb ) {
     documentType = determineDocumentType(pack, argv);
     if ( !documentType ) {
@@ -386,7 +394,7 @@ async function handleUnpack(argv) {
   console.log(`[${dbMode}] Unpacking "${chalk.blue(pack)}" to "${chalk.blue(source)}"`);
 
   try {
-    await extractPack(pack, source, { nedb, yaml, documentType, log: true });
+    await extractPack(pack, source, { nedb, yaml, documentType, clean, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;

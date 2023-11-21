@@ -1,3 +1,9 @@
+## 1.0.2
+
+### Improvements
+ - Added the `--clean` command-line flag for unpack operations that will delete the destination directory before unpacking.
+ - Throw an error when packing if an entry with the same `_id` would overwrite an entry that had already been packed as part of the same operation.
+
 ## 1.0.1
 
 ### Fixes
