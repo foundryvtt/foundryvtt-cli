@@ -97,6 +97,42 @@ fvtt package pack "compendiumName"
 
 Reads a directory of serialized Objects and writes them to a database in the current Package /packs/ directory. There are a number of options available to customize the operation, check out `fvtt package pack --help` for more information.
 
+#### Subdirectories and Modules
+You can create subdirectories for your packs directory. For example, in a module, the module.json could define an items pack for two distinct systems:
+```json
+"packs":[
+    {
+      "name": "mymodule_items_sfrpg",
+      "label": "MyModule Items",
+      "path": "packs/items/sfrpg",
+      "type": "Item",
+      "private": false,
+      "system": "sfrpg"
+    },
+    {
+      "name": "mymodule_items_pf2e",
+      "label": "MyModule Items",
+      "path": "packs/items/pf2e",
+      "type": "Item",
+      "private": false,
+      "system": "pf2e"
+    }
+]
+```
+In the Foundry Data folder, this will create the following folder hierarchy:
+`Data/modules/mymodule/packs/items/sfrpg/` and `Data/modules/mymodule/packs/items/pf2e/`.
+
+To unpack and pack these, use the path you defined for the compendium name. For example, to extract jsons to a folder in your home directory:
+```bash
+fvtt package unpack -n "items/pf2e" --outputDirectory "~/jsons/items/pf2e"
+fvtt package unpack -n "items/sfrpg" --outputDirectory "~/jsons/items/sfrpg"
+```
+To pack them using subdirectories:
+```bash
+fvtt package pack -n "items/pf2e" --inputDirectory "~/jsons/items/pf2e" --outputDirectory "packs"
+fvtt package pack -n "items/sfrpg" --inputDirectory "~/jsons/items/sfrpg" --outputDirectory "packs"
+```
+
 ## Example Workflow
 
 ```bash
