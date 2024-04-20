@@ -90,12 +90,24 @@ fvtt package unpack "compendiumName"
 Reads a database from the current Package /packs/ directory and writes each document as a serialized Object to its own file.
 There are a number of options available to customize the output, check out `fvtt package unpack --help` for more information.
 
+If you run this command in the terminal, it should output what new files were written or updated. For example:
+```bash
+Unpacking "foundrydatav11/Data/modules/mymodule/packs/myitems" to "git/mymodule/jsons/myitems"
+Wrote My_Item_Name_hPLXDSGyHzlupBS2.json
+```
+
 #### Pack
 ```bash
 fvtt package pack "compendiumName"
 ```
 
 Reads a directory of serialized Objects and writes them to a database in the current Package /packs/ directory. There are a number of options available to customize the operation, check out `fvtt package pack --help` for more information.
+
+If you run this command in the terminal, it should output what new files were written or updated. For example:
+```bash
+Packing "git/mymodule/jsons/myitems" into "git/mymodule/packs/myitems"
+Packed hPLXDSGyHzlupBS2 (My Item Name)
+```
 
 ## Example Workflow
 
