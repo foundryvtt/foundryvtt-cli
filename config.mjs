@@ -104,4 +104,20 @@ export default class Config {
   #writeConfig() {
     fs.writeFileSync(this.configPath, yaml.dump(this.#config));
   }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Load a local configuration file
+   * @param {string} configFile  The path to the config file
+   */
+  loadLocalConf(configFile) {
+    if ( !fs.existsSync(configFile) ) return;
+    /** @type {Record<string, any>} */
+    const conf = yaml.load(fs.readFileSync(configFile, "utf8"));
+    this.configPath = configFile;
+    for ( let key of Object.keys(conf) ) {
+      this.#config[key] = conf[key];
+    }
+  }
 }
