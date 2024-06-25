@@ -164,7 +164,7 @@ Extract the contents of a compendium pack into individual source files for each 
     * **transformEntry:** *(entry: object): Promise<false|void>* A function that is called on every entry. Returning *false* indicates that the entry should be discarded.
     * **transformName:** *(entry: object): Promise<string|void>* A function that is called on every entry. The value returned from this will be used as the entry's filename and must include the appropriate file extension. If nothing is returned, an auto-generated name will be used instead.
     * **jsonOptions:** *object*
-        * **replacer:** *(key: string, value: any): any|Array<string|number>* A replacer function of an array of property names in the object to include in the resulting string.
+        * **replacer:** *(key: string, value: any): any|Array<string|number>* A replacer function or an array of property names in the object to include in the resulting string.
         * **space:** *string|number* A number of spaces or a string to use as indentation.
 
 ## Contributing
