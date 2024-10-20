@@ -1,5 +1,5 @@
 {
-  "name": "@foundryvtt/foundryvtt-cli",
+  "name": "foundryvtt-cli",
   "productName": "Foundry VTT CLI",
   "description": "The Official CLI for Foundry VTT",
   "version": "1.0.4",
