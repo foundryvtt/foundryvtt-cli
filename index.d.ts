@@ -5,7 +5,7 @@ declare module "foundryvtt-cli" {
    * A mapping of primary document types to collection names.
    * @type {Record<DocumentType, DocumentCollection>}
    */
-  export const TYPE_COLLECTION_MAP = {
+  export const TYPE_COLLECTION_MAP: Record<string, string> = {
     Actor: "actors",
     Adventure: "adventures",
     Cards: "cards",
