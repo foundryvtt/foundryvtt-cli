@@ -1,1 +1,5 @@
-export { compilePack, extractPack } from "./lib/package.mjs";
+export {
+  compilePack,
+  extractPack,
+  TYPE_COLLECTION_MAP,
+} from "./lib/package.mjs";
