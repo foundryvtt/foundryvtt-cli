@@ -2,7 +2,7 @@
   "name": "@foundryvtt/foundryvtt-cli",
   "productName": "Foundry VTT CLI",
   "description": "The Official CLI for Foundry VTT",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": {
     "name": "Foundry Gaming LLC",
     "email": "admin@foundryvtt.com",
@@ -16,17 +16,17 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "chalk": "^5.2.0",
-    "classic-level": "^1.2.0",
+    "chalk": "^5.4.1",
+    "classic-level": "^1.4.1",
     "esm": "^3.2.25",
     "js-yaml": "^4.1.0",
-    "mkdirp": "^3.0.0",
-    "nedb-promises": "^6.2.1",
-    "yargs": "^17.7.1"
+    "mkdirp": "^3.0.1",
+    "nedb-promises": "^6.2.3",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "eslint": "^8.47.0",
-    "eslint-plugin-jsdoc": "^46.4.6"
+    "eslint": "^8.57.1",
+    "eslint-plugin-jsdoc": "^46.10.1"
   },
   "engines": {
     "node": ">17.0.0"
