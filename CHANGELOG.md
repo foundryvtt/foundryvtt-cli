@@ -1,3 +1,8 @@
+## 1.0.4
+
+### Improvements
+ - Added the ability to pack and unpack JournalEntry categories.
+
 ## 1.0.3
 
 ### Fixes
