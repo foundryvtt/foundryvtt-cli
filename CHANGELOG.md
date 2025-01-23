@@ -1,3 +1,13 @@
+## 1.0.4
+
+### Improvements
+ - Added the ability to pack and unpack JournalEntry categories.
+
+## 1.0.3
+
+### Fixes
+ - Fixed packing and unpacking ignoring Scene Regions.
+
 ## 1.0.2
 
 ### Improvements

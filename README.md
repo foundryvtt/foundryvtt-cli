@@ -90,12 +90,24 @@ fvtt package unpack "compendiumName"
 Reads a database from the current Package /packs/ directory and writes each document as a serialized Object to its own file.
 There are a number of options available to customize the output, check out `fvtt package unpack --help` for more information.
 
+If you run this command in the terminal, it should output what new files were written or updated. For example:
+```bash
+Unpacking "foundrydatav11/Data/modules/mymodule/packs/myitems" to "git/mymodule/jsons/myitems"
+Wrote My_Item_Name_hPLXDSGyHzlupBS2.json
+```
+
 #### Pack
 ```bash
 fvtt package pack "compendiumName"
 ```
 
 Reads a directory of serialized Objects and writes them to a database in the current Package /packs/ directory. There are a number of options available to customize the operation, check out `fvtt package pack --help` for more information.
+
+If you run this command in the terminal, it should output what new files were written or updated. For example:
+```bash
+Packing "git/mymodule/jsons/myitems" into "git/mymodule/packs/myitems"
+Packed hPLXDSGyHzlupBS2 (My Item Name)
+```
 
 #### Subdirectories and Modules
 You can create subdirectories for your packs directory. For example, in a module, the module.json could define an items pack for two distinct systems:
@@ -200,7 +212,7 @@ Extract the contents of a compendium pack into individual source files for each 
     * **transformEntry:** *(entry: object): Promise<false|void>* A function that is called on every entry. Returning *false* indicates that the entry should be discarded.
     * **transformName:** *(entry: object): Promise<string|void>* A function that is called on every entry. The value returned from this will be used as the entry's filename and must include the appropriate file extension. If nothing is returned, an auto-generated name will be used instead.
     * **jsonOptions:** *object*
-        * **replacer:** *(key: string, value: any): any|Array<string|number>* A replacer function of an array of property names in the object to include in the resulting string.
+        * **replacer:** *(key: string, value: any): any|Array<string|number>* A replacer function or an array of property names in the object to include in the resulting string.
         * **space:** *string|number* A number of spaces or a string to use as indentation.
 
 ## Contributing
