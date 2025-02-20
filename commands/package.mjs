@@ -26,6 +26,8 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  * @property {boolean} [recursive]                      When packing, recurse down through all directories in the input
  *                                                      directory to find source files.
  * @property {boolean} [clean]                          When unpacking, delete the destination directory first.
+ * @property {boolean} [expandAdventures]               When unpacking, extract adventure documents into a folder with
+ *                                                      each contained document as its own entry in a folder.
  */
 
 /**
@@ -122,6 +124,11 @@ export function getCommand() {
       yargs.option("clean", {
         alias: "c",
         describe: "When unpacking, delete the destination directory first.",
+        type: "boolean"
+      });
+
+      yargs.option("expandAdventures", {
+        describe: "When unpacking, extract adventure documents into a folder with each contained document as its own entry in a folder.",
         type: "boolean"
       });
 
