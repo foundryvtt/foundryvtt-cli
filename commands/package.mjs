@@ -26,6 +26,8 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  * @property {boolean} [recursive]                      When packing, recurse down through all directories in the input
  *                                                      directory to find source files.
  * @property {boolean} [clean]                          When unpacking, delete the destination directory first.
+ * @property {boolean} [folders]                        When unpacking, create a directory structure that matches the
+ *                                                      compendium folders.
  */
 
 /**
@@ -122,6 +124,11 @@ export function getCommand() {
       yargs.option("clean", {
         alias: "c",
         describe: "When unpacking, delete the destination directory first.",
+        type: "boolean"
+      });
+
+      yargs.option("folders", {
+        describe: "When unpacking, create a directory structure that matches the compendium folders.",
         type: "boolean"
       });
 
