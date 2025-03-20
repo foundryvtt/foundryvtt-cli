@@ -381,7 +381,7 @@ async function handleUnpack(argv) {
   }
 
   let documentType;
-  const { nedb, yaml, clean } = argv;
+  const { nedb, yaml, clean, folders } = argv;
   if ( nedb ) {
     documentType = determineDocumentType(pack, argv);
     if ( !documentType ) {
@@ -401,7 +401,7 @@ async function handleUnpack(argv) {
   console.log(`[${dbMode}] Unpacking "${chalk.blue(pack)}" to "${chalk.blue(source)}"`);
 
   try {
-    await extractPack(pack, source, { nedb, yaml, documentType, clean, log: true });
+    await extractPack(pack, source, { nedb, yaml, documentType, clean, folders, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;
