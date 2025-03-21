@@ -26,6 +26,8 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  * @property {boolean} [recursive]                      When packing, recurse down through all directories in the input
  *                                                      directory to find source files.
  * @property {boolean} [clean]                          When unpacking, delete the destination directory first.
+ * @property {boolean} [folders]                        When unpacking, create a directory structure that matches the
+ *                                                      compendium folders.
  */
 
 /**
@@ -122,6 +124,11 @@ export function getCommand() {
       yargs.option("clean", {
         alias: "c",
         describe: "When unpacking, delete the destination directory first.",
+        type: "boolean"
+      });
+
+      yargs.option("folders", {
+        describe: "When unpacking, create a directory structure that matches the compendium folders.",
         type: "boolean"
       });
 
@@ -374,7 +381,7 @@ async function handleUnpack(argv) {
   }
 
   let documentType;
-  const { nedb, yaml, clean } = argv;
+  const { nedb, yaml, clean, folders } = argv;
   if ( nedb ) {
     documentType = determineDocumentType(pack, argv);
     if ( !documentType ) {
@@ -394,7 +401,7 @@ async function handleUnpack(argv) {
   console.log(`[${dbMode}] Unpacking "${chalk.blue(pack)}" to "${chalk.blue(source)}"`);
 
   try {
-    await extractPack(pack, source, { nedb, yaml, documentType, clean, log: true });
+    await extractPack(pack, source, { nedb, yaml, documentType, clean, folders, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;

@@ -206,11 +206,13 @@ Extract the contents of a compendium pack into individual source files for each 
 * **options:** *object*
     * **nedb:** *boolean = false* Whether to operate on a NeDB database, otherwise a LevelDB database is assumed.
     * **yaml:** *boolean = false* Whether the source files are in YAML format, otherwise JSON is assumed.
-    * **yamlOptions** *object = {}* Options to pass to `yaml.dump` when serializing Documents.
+    * **yamlOptions:** *object = {}* Options to pass to `yaml.dump` when serializing Documents.
     * **log:** *boolean = false* Whether to log operation progress to the console.
+    * **folders:** *boolean = false* Create a directory structure that matches the pack's Folder documents. Folder documents are written to their matching directory with the name `_Folder.{yml|json}`.
     * **documentType:** *string* For NeDB operations, a **documentType** must be provided. This should be the same as the pack's *type* field in the *module.json* or *system.json*.
     * **transformEntry:** *(entry: object): Promise<false|void>* A function that is called on every entry. Returning *false* indicates that the entry should be discarded.
     * **transformName:** *(entry: object): Promise<string|void>* A function that is called on every entry. The value returned from this will be used as the entry's filename and must include the appropriate file extension. If nothing is returned, an auto-generated name will be used instead.
+    * **transformFolderName:** *(entry: object): Promise<string|void>* A function used to generate a directory name for an extracted Folder document when the `folders` option is used.
     * **jsonOptions:** *object*
         * **replacer:** *(key: string, value: any): any|Array<string|number>* A replacer function or an array of property names in the object to include in the resulting string.
         * **space:** *string|number* A number of spaces or a string to use as indentation.
