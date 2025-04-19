@@ -1,6 +1,7 @@
 import Config from "../config.mjs";
 import { spawn } from "child_process";
 import path from "path";
+import * as fs from 'fs';
 
 /**
  * Get the command object for the launch command
@@ -71,9 +72,27 @@ export function getCommand() {
         return;
       }
 
+      // Figure out if we are running the fvtt application or nodejs version
+      let fvttPath = path.normalize(path.join(installPath, "resources", "app", "main.js")); 
+      try {
+        await fs.promises.stat(fvttPath)
+      } catch (error) {
+        // try to use the nodejs path instead
+        fvttPath = path.normalize(path.join(installPath, "main.js"));
+      }
+
+      // If we still don't have access to the main.js file then error out
+      try {
+        await fs.promises.stat(fvttPath);
+      } catch (error) {
+        console.error("Unable to find the main.js file under the installPath: %s\n Error: %s", installPath, error)
+        process.exitCode = 1;
+        return;
+      }
+
       // Launch Foundry VTT
       const foundry = spawn("node", [
-        path.normalize(path.join(installPath, "resources", "app", "main.js")),
+        fvttPath,
         `--dataPath=${dataPath}`,
         `--port=${port}`,
         demo ? "--demo" : "",
