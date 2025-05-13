@@ -1,6 +1,7 @@
 import Config from "../config.mjs";
 import { spawn } from "child_process";
 import path from "path";
+import * as fs from 'fs';
 
 /**
  * Get the command object for the launch command
@@ -71,9 +72,20 @@ export function getCommand() {
         return;
       }
 
+      // Figure out if we are running the fvtt application or nodejs version
+      const electronPath = path.normalize(path.join(installPath, "resources", "app", "main.js"));
+      const nodePath = path.normalize(path.join(installPath, "main.js"));
+      const fvttPath = fs.existsSync(electronPath) ? electronPath : nodePath;
+
+      if ( !fs.existsSync(fvttPath) ) {
+        console.error("Unable to find a valid launch path at '%s' or '%s'.", nodePath, electronPath);
+        process.exitCode = 1;
+        return;
+      }
+
       // Launch Foundry VTT
       const foundry = spawn("node", [
-        path.normalize(path.join(installPath, "resources", "app", "main.js")),
+        fvttPath,
         `--dataPath=${dataPath}`,
         `--port=${port}`,
         demo ? "--demo" : "",
