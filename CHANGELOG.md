@@ -2,7 +2,7 @@
 
 ### Improvements
  - (Jeff Hitchcock) Added the `--folders` command-line flag, and corresponding `folders` parameter to `extractPack`. When used, this option writes the pack's entries to a directory structure matching the pack's internal Folder document structure.
- - (Jeff Hitchcock) Added the `--expandAdventures` command-line flags, and correspnding `expandAdventures` parameter to `extractPack`. When used, this option writes each Adventure document's embedded documents to their own files.
+ - (Jeff Hitchcock) Added the `--expandAdventures` command-line flags, and corresponding `expandAdventures` parameter to `extractPack`. When used, this option writes each Adventure document's embedded documents to their own files.
 
 ## 1.0.4
 
