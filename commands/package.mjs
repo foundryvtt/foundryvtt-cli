@@ -135,7 +135,7 @@ export function getCommand() {
       });
 
       yargs.option("expandAdventures", {
-        describe: "When unpacking, extract adventure documents into a folder with each contained document as its own entry in a folder.",
+        describe: "When unpacking, extract documents embedded inside Adventures to their own files. If supplied alongside the --folders option, the Adventure is treated like a folder.",
         type: "boolean"
       });
 

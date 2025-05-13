@@ -213,7 +213,7 @@ Extract the contents of a compendium pack into individual source files for each 
     * **transformEntry:** *(entry: object): Promise<false|void>* A function that is called on every entry. Returning *false* indicates that the entry should be discarded.
     * **transformName:** *(entry: object): Promise<string|void>* A function that is called on every entry. The value returned from this will be used as the entry's filename and must include the appropriate file extension. If nothing is returned, an auto-generated name will be used instead.
     * **transformFolderName:** *(entry: object): Promise<string|void>* A function used to generate a directory name for an extracted Folder document when the `folders` option is used.
-    * **expandAdventures:** *boolean* When extracting an adventure document, write each embedded document to its own file.
+    * **expandAdventures:** *boolean* Write documents emebdded in Adventures to their own files. If the `folders` option is also supplied, the Adventure is treated like a folder, and written to `_Adventure.{yml|json}` instead of `_Folder.{yml|json}`.
     * **jsonOptions:** *object*
         * **replacer:** *(key: string, value: any): any|Array<string|number>* A replacer function or an array of property names in the object to include in the resulting string.
         * **space:** *string|number* A number of spaces or a string to use as indentation.
