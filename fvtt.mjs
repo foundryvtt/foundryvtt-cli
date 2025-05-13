@@ -9,7 +9,7 @@ import Config from "./config.mjs";
 
 const argv = yargs(hideBin(process.argv))
   .usage("Usage: $0 <command> [options]")
-  .config('config', 'Path to YAML config file', function(configFile) {
+  .config("config", "Path to YAML config file", function(configFile) {
     Config.instance.loadLocalConf(configFile);
     return Config.instance.getAll();
   })

@@ -116,8 +116,6 @@ export default class Config {
     /** @type {Record<string, any>} */
     const conf = yaml.load(fs.readFileSync(configFile, "utf8"));
     this.configPath = configFile;
-    for ( let key of Object.keys(conf) ) {
-      this.#config[key] = conf[key];
-    }
+    for ( const key of Object.keys(conf) ) this.#config[key] = conf[key];
   }
 }
