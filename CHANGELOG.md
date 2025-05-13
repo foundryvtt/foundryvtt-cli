@@ -1,6 +1,7 @@
 ## 1.1.0
 
 ### Improvements
+ - Attempting to unpack a directory that is not a valid LevelDB database now throws an error.
  - (Jeff Hitchcock) Added the `--folders` command-line flag, and corresponding `folders` parameter to `extractPack`. When used, this option writes the pack's entries to a directory structure matching the pack's internal Folder document structure.
 
 ### Fixes
