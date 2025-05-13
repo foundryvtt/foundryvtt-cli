@@ -73,19 +73,12 @@ export function getCommand() {
       }
 
       // Figure out if we are running the fvtt application or nodejs version
-      let fvttPath = path.normalize(path.join(installPath, "resources", "app", "main.js")); 
-      try {
-        await fs.promises.stat(fvttPath)
-      } catch (error) {
-        // try to use the nodejs path instead
-        fvttPath = path.normalize(path.join(installPath, "main.js"));
-      }
+      const electronPath = path.normalize(path.join(installPath, "resources", "app", "main.js"));
+      const nodePath = path.normalize(path.join(installPath, "main.js"));
+      const fvttPath = fs.existsSync(electronPath) ? electronPath : nodePath;
 
-      // If we still don't have access to the main.js file then error out
-      try {
-        await fs.promises.stat(fvttPath);
-      } catch (error) {
-        console.error("Unable to find the main.js file under the installPath: %s\n Error: %s", installPath, error)
+      if ( !fs.existsSync(fvttPath) ) {
+        console.error("Unable to find a valid launch path at '%s' or '%s'.", nodePath, electronPath);
         process.exitCode = 1;
         return;
       }

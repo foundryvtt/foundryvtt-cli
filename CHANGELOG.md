@@ -3,6 +3,9 @@
 ### Improvements
  - (Jeff Hitchcock) Added the `--folders` command-line flag, and corresponding `folders` parameter to `extractPack`. When used, this option writes the pack's entries to a directory structure matching the pack's internal Folder document structure.
 
+### Fixes
+ - (Jakob Törmä) Fixed launch command assuming electron directory structure.
+
 ## 1.0.4
 
 ### Improvements
