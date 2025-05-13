@@ -5,6 +5,7 @@
 
 ### Fixes
  - (Jakob Törmä) Fixed launch command assuming electron directory structure.
+ - Fixed packing and unpacking ignoring CombatantGroups.
 
 ## 1.0.4
 
