@@ -4,7 +4,7 @@
  - Attempting to unpack a directory that is not a valid LevelDB database now throws an error.
  - (BoltsJ) Added the `--config` command-line flag. Configuration options read from this file will be merged with the global `.fvttrc.yml` configuration options.
  - (Jeff Hitchcock) Added the `--folders` command-line flag, and corresponding `folders` parameter to `extractPack`. When used, this option writes the pack's entries to a directory structure matching the pack's internal Folder document structure.
- - (Jeff Hitchcock) Added the `--expandAdventures` command-line flags, and corresponding `expandAdventures` parameter to `extractPack`. When used, this option writes each Adventure document's embedded documents to their own files.
+ - (Jeff Hitchcock) Added the `--expandAdventures` command-line flag, and corresponding `expandAdventures` parameter to `extractPack`. When used, this option writes each Adventure document's embedded documents to their own files.
 
 ### Fixes
  - (Jakob Törmä) Fixed launch command assuming electron directory structure.
