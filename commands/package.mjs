@@ -28,6 +28,8 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  * @property {boolean} [clean]                          When unpacking, delete the destination directory first.
  * @property {boolean} [folders]                        When unpacking, create a directory structure that matches the
  *                                                      compendium folders.
+ * @property {boolean} [expandAdventures]               When unpacking, extract adventure documents into a folder with
+ *                                                      each contained document as its own entry in a folder.
  */
 
 /**
@@ -129,6 +131,11 @@ export function getCommand() {
 
       yargs.option("folders", {
         describe: "When unpacking, create a directory structure that matches the compendium folders.",
+        type: "boolean"
+      });
+
+      yargs.option("expandAdventures", {
+        describe: "When unpacking, extract documents embedded inside Adventures to their own files. If supplied alongside the --folders option, the Adventure is treated like a folder.",
         type: "boolean"
       });
 
@@ -381,7 +388,7 @@ async function handleUnpack(argv) {
   }
 
   let documentType;
-  const { nedb, yaml, clean, folders } = argv;
+  const { nedb, yaml, clean, folders, expandAdventures } = argv;
   if ( nedb ) {
     documentType = determineDocumentType(pack, argv);
     if ( !documentType ) {
@@ -401,7 +408,7 @@ async function handleUnpack(argv) {
   console.log(`[${dbMode}] Unpacking "${chalk.blue(pack)}" to "${chalk.blue(source)}"`);
 
   try {
-    await extractPack(pack, source, { nedb, yaml, documentType, clean, folders, log: true });
+    await extractPack(pack, source, { nedb, yaml, documentType, clean, folders, expandAdventures, log: true });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;
