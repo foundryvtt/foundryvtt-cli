@@ -36,13 +36,13 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  * The working package ID.
  * @type {string|null}
  */
-let currentPackageId = Config.instance.get("currentPackageId");
+let currentPackageId = null;
 
 /**
  * The working package type.
  * @type {PackageType|null}
  */
-let currentPackageType = Config.instance.get("currentPackageType");
+let currentPackageType = null;
 
 /**
  * Get the command object for the package command
@@ -142,6 +142,8 @@ export function getCommand() {
       return yargs;
     },
     handler: async argv => {
+      currentPackageId = Config.instance.get("currentPackageId");
+      currentPackageType = Config.instance.get("currentPackageType");
       if ( argv.id ) currentPackageId = argv.id;
       if ( argv.type ) currentPackageType = argv.type;
 
