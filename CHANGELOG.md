@@ -1,3 +1,11 @@
+## 2.0.0
+
+### Fixes
+ - (BoltsJ) Fixed the package ID and type not being read from local config.
+
+### Breaking Changes
+ - (Jeff Hitchcock) When passing both `--expandAdventures` and `--folders`, the Adventure's contents will now be grouped by Document type in separate folders. The `--recursive` flag must be supplied when packing entries extracted in this way.
+
 ## 1.1.0
 
 ### Improvements
