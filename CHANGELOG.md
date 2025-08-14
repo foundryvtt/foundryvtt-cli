@@ -6,6 +6,9 @@
 ### Breaking Changes
  - (Jeff Hitchcock) When passing both `--expandAdventures` and `--folders`, the Adventure's contents will now be grouped by Document type in separate folders. The `--recursive` flag must be supplied when packing entries extracted in this way.
 
+### Improvements
+ - Added the `--omitVolatile` command-line flag, and corresponding `omitVolatile` parameter to `extractPact`. When used, changes will only be written if at least one non-volatile field has changed between the entry on disk and the candidate entry being extracted. Currently, `_stats.createdTime`, `_stats.modifiedTime`, and `_stats.lastModifiedBy` are considered volatile.
+
 ## 1.1.0
 
 ### Improvements

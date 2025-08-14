@@ -30,6 +30,10 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  *                                                      compendium folders.
  * @property {boolean} [expandAdventures]               When unpacking, extract adventure documents into a folder with
  *                                                      each contained document as its own entry in a folder.
+ * @property {boolean} [omitVolatile]                   When unpacking, diff the candidate entry against an existing one
+ *                                                      and only write it if non-volatile fields have changed.
+ *                                                      Currently, _stats.createdTime, _stats.modifiedTime, and
+ *                                                      _stats.lastModifiedBy are considered volatile.
  */
 
 /**
@@ -136,6 +140,11 @@ export function getCommand() {
 
       yargs.option("expandAdventures", {
         describe: "When unpacking, extract documents embedded inside Adventures to their own files. If supplied alongside the --folders option, the Adventure is treated like a folder.",
+        type: "boolean"
+      });
+
+      yargs.option("omitVolatile", {
+        describe: "When unpacking, diff the candidate entry against an existing one and only write it if non-volatile fields have changed. Currently, _stats.createdTime, _stats.modifiedTime, and _stats.lastModifiedBy are considered volatile.",
         type: "boolean"
       });
 
@@ -390,7 +399,7 @@ async function handleUnpack(argv) {
   }
 
   let documentType;
-  const { nedb, yaml, clean, folders, expandAdventures } = argv;
+  const { nedb, yaml, clean, folders, expandAdventures, omitVolatile } = argv;
   if ( nedb ) {
     documentType = determineDocumentType(pack, argv);
     if ( !documentType ) {
@@ -410,7 +419,9 @@ async function handleUnpack(argv) {
   console.log(`[${dbMode}] Unpacking "${chalk.blue(pack)}" to "${chalk.blue(source)}"`);
 
   try {
-    await extractPack(pack, source, { nedb, yaml, documentType, clean, folders, expandAdventures, log: true });
+    await extractPack(pack, source, {
+      nedb, yaml, documentType, clean, folders, expandAdventures, omitVolatile, log: true
+    });
   } catch ( err ) {
     console.error(err);
     process.exitCode = 1;
