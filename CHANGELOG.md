@@ -1,3 +1,13 @@
+## 3.0.0
+
+### Breaking Changes
+ - (Jeff Hitchcock) Using the `--expandAdventures` option without `--folders` now adds the document type to the extracted entry's name to disambiguate it in cases where it shares a name and ID with another document in the adventure of a different type.
+ - File paths inside extracted adventure entries now always use POSIX delimiters, regardless of which OS the extraction occurs on.
+
+### Improvements
+ - Added `_stats.coreVersion` and `_stats.systemVersion` to the list of volatile fields ignored by the `--omitVolatile` flag.
+ - Volatile fields are now also ignored on embedded children.
+
 ## 2.0.0
 
 ### Fixes

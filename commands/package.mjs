@@ -32,8 +32,9 @@ import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mj
  *                                                      each contained document as its own entry in a folder.
  * @property {boolean} [omitVolatile]                   When unpacking, diff the candidate entry against an existing one
  *                                                      and only write it if non-volatile fields have changed.
- *                                                      Currently, _stats.createdTime, _stats.modifiedTime, and
- *                                                      _stats.lastModifiedBy are considered volatile.
+ *                                                      Currently, _stats.createdTime, _stats.modifiedTime,
+ *                                                      _stats.lastModifiedBy, _stats.systemVersion, and
+ *                                                      _stats.coreVersion are considered volatile.
  */
 
 /**
@@ -144,7 +145,7 @@ export function getCommand() {
       });
 
       yargs.option("omitVolatile", {
-        describe: "When unpacking, diff the candidate entry against an existing one and only write it if non-volatile fields have changed. Currently, _stats.createdTime, _stats.modifiedTime, and _stats.lastModifiedBy are considered volatile.",
+        describe: "When unpacking, diff the candidate entry against an existing one and only write it if non-volatile fields have changed. Currently, _stats.createdTime, _stats.modifiedTime, _stats.lastModifiedBy, _stats.systemVersion, and _stats.coreVersion are considered volatile.",
         type: "boolean"
       });
 
