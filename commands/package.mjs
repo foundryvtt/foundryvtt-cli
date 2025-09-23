@@ -480,7 +480,7 @@ async function handlePack(argv) {
  */
 async function handleRepair(argv) {
   const { pack } = determinePaths(argv, "pack");
-  const { nedb, yaml, recursive } = argv;
+  const { nedb } = argv;
   if ( nedb || !pack ) {
     process.exitCode = 1;
     return;
