@@ -23,16 +23,18 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write  # Required for OIDC
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
+      # Ensure npm 11.5.1 or later is installed
+      - name: Update npm
+        run: npm install -g npm@latest
       - run: npm ci
       - run: git config --global user.email "andrew@foundryvtt.com"
       - run: git config --global user.name "Andrew Clayton"
       - run: npm version ${{ github.ref_name }}
       - run: npm publish --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM}}

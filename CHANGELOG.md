@@ -1,3 +1,8 @@
+## 3.0.1
+
+### Improvements
+ - Updated publish workflow to use OIDC.
+
 ## 3.0.0
 
 ### Breaking Changes
