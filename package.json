@@ -15,6 +15,7 @@
   "homepage": "https://foundryvtt.com",
   "license": "MIT",
   "private": false,
+  "repository": "github:foundryvtt/foundryvtt-cli",
   "dependencies": {
     "chalk": "^5.4.1",
     "classic-level": "^1.4.1",
