@@ -1,5 +1,5 @@
 import fs from "fs";
-import yaml from "js-yaml";
+import * as yaml from "yaml";
 import path from "path";
 import * as os from "os";
 
@@ -41,8 +41,8 @@ export default class Config {
     this.configPath = path.join(basePath, ".fvttrc.yml");
 
     // Ensure the config file exists
-    if ( !fs.existsSync(this.configPath) ) fs.writeFileSync(this.configPath, yaml.dump({}));
-    this.#config = yaml.load(fs.readFileSync(this.configPath, "utf8"));
+    if ( !fs.existsSync(this.configPath) ) fs.writeFileSync(this.configPath, yaml.stringify({}));
+    this.#config = yaml.parse(fs.readFileSync(this.configPath, "utf8"));
   }
 
   /* -------------------------------------------- */
@@ -102,7 +102,7 @@ export default class Config {
    * Write the configuration to disk
    */
   #writeConfig() {
-    fs.writeFileSync(this.configPath, yaml.dump(this.#config));
+    fs.writeFileSync(this.configPath, yaml.stringify(this.#config));
   }
 
   /* -------------------------------------------- */
@@ -114,7 +114,7 @@ export default class Config {
   loadLocalConf(configFile) {
     if ( !fs.existsSync(configFile) ) return;
     /** @type {Record<string, any>} */
-    const conf = yaml.load(fs.readFileSync(configFile, "utf8"));
+    const conf = yaml.parse(fs.readFileSync(configFile, "utf8"));
     this.configPath = configFile;
     for ( const key of Object.keys(conf) ) this.#config[key] = conf[key];
   }

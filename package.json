@@ -20,9 +20,9 @@
     "chalk": "^5.4.1",
     "classic-level": "^1.4.1",
     "esm": "^3.2.25",
-    "js-yaml": "^4.1.0",
     "mkdirp": "^3.0.1",
     "nedb-promises": "^6.2.3",
+    "yaml": "^2.8.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
