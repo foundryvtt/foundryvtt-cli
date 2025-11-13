@@ -2,7 +2,7 @@ import Config from "../config.mjs";
 import path from "path";
 import fs from "fs";
 import chalk from "chalk";
-import { compilePack, extractPack, TYPE_COLLECTION_MAP } from "../lib/package.mjs";
+import { compilePack, extractPack, repairPack, TYPE_COLLECTION_MAP } from "../lib/package.mjs";
 
 /**
  * @typedef {"Module"|"System"|"World"} PackageType
@@ -61,7 +61,7 @@ export function getCommand() {
       yargs.positional("action", {
         describe: "The action to perform",
         type: "string",
-        choices: ["workon", "clear", "unpack", "pack"]
+        choices: ["workon", "clear", "unpack", "pack", "repair"]
       });
 
       yargs.positional("value", {
@@ -163,6 +163,7 @@ export function getCommand() {
         case "clear": handleClear(); break;
         case "unpack": await handleUnpack(argv); break;
         case "pack": await handlePack(argv); break;
+        case "repair" await handleRepair(argv); break;
 
         default:
           if ( !currentPackageId ) {
@@ -463,4 +464,36 @@ async function handlePack(argv) {
     console.error(err);
     process.exitCode = 1;
   }
+}
+
+
+/* -------------------------------------------- */
+/*  Repair                                      */
+/* -------------------------------------------- */
+
+/**
+ * Repair database
+ *
+ * @param {CLIArgs} argv  The command line arguments
+ * @returns {Promise<void>}
+ * @private
+ */
+async function handleRepair(argv) {
+  const { pack } = determinePaths(argv, "pack");
+  const { nedb } = argv;
+  if ( nedb || !pack ) {
+    process.exitCode = 1;
+    return;
+  }
+
+  // Assume the lock does not persist even for corrupt database.
+  // And if it does, user must manually remove it to acknowledge the potential danger of running this.
+  if ( isFileLocked(path.join(pack, "LOCK")) ) {
+    console.error(chalk.red(`The pack "${chalk.blue(pack)}" is currently in use by Foundry VTT. `
+      + "Please close Foundry VTT and try again."));
+    process.exitCode = 1;
+    return;
+  }
+
+  return repairPack(pack, { log: true });
 }
