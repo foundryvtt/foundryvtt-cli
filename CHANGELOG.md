@@ -1,7 +1,8 @@
 ## 3.0.2
 
 ### Improvements
- - Add support for processing ActiveEffect primary Documents.
+ - Added support for processing ActiveEffect primary Documents.
+ - Added `documentType` to the context objects passed to `transformEntry` and `transformName`.
 
 ## 3.0.1
 
