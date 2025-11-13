@@ -1,3 +1,8 @@
+## 3.0.2
+
+### Improvements
+ - Add support for processing ActiveEffect primary Documents.
+
 ## 3.0.1
 
 ### Improvements
