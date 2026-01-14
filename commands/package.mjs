@@ -317,7 +317,6 @@ function determinePaths(argv, operation) {
     return {};
   }
 
-  const typeDir = `${currentPackageType.toLowerCase()}s`;
   const compendiumName = argv.compendiumName ?? argv.value;
   if ( !compendiumName ) {
     console.error("No compendium name provided. Use `-n <name>` to supply it.");
@@ -327,7 +326,10 @@ function determinePaths(argv, operation) {
   let pack = operation === "pack" ? argv.outputDirectory : argv.inputDirectory;
   let source = operation === "pack" ? argv.inputDirectory : argv.outputDirectory;
   if ( pack ) pack = path.join(pack, compendiumName);
-  else pack = path.join(dataPath, "Data", typeDir, currentPackageId, "packs", compendiumName);
+  else {
+    const typeDir = `${currentPackageType.toLowerCase()}s`;
+    pack = path.join(dataPath, "Data", typeDir, currentPackageId, "packs", compendiumName);
+  }
   source ??= path.join(pack, "_source");
   if ( argv.nedb ) pack += ".db";
   return { source: path.resolve(path.normalize(source)), pack: path.resolve(path.normalize(pack)) };

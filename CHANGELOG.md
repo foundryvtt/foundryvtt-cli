@@ -1,3 +1,12 @@
+## 3.0.3
+
+### Improvements
+ - Added support for processing Level embedded Documents.
+ - (Mana) Added the `transformSerialized` option which can be used to modify the serialized content before it is written to disk.
+
+### Fixes
+ - Fixed error thrown when attempting to pack or unpack with `--in` and `--out` options if configuration hadn't been completed.
+
 ## 3.0.2
 
 ### Improvements
