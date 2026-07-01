@@ -1,1 +1,1 @@
-export { compilePack, extractPack } from "./lib/package.mjs";
+export { compilePack, extractPack, repairPack } from "./lib/package.mjs";
