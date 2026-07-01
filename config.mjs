@@ -1,7 +1,7 @@
-import fs from "fs";
-import yaml from "js-yaml";
-import path from "path";
-import * as os from "os";
+import fs from "node:fs";
+import path from "node:path";
+import * as os from "node:os";
+import * as yaml from "js-yaml";
 
 /**
  * Manages the configuration of the CLI. Stored as config.yml

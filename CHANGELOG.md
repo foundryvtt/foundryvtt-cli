@@ -1,3 +1,8 @@
+## 3.0.4
+
+### Fixes
+ - Bump dependencies to resolve vulnerability warnings.
+
 ## 3.0.3
 
 ### Improvements

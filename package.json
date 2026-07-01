@@ -17,19 +17,22 @@
   "private": false,
   "repository": "github:foundryvtt/foundryvtt-cli",
   "dependencies": {
-    "chalk": "^5.4.1",
-    "classic-level": "^1.4.1",
+    "chalk": "^5.6.2",
+    "classic-level": "^3.0.0",
     "esm": "^3.2.25",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^5.2.0",
     "mkdirp": "^3.0.1",
     "nedb-promises": "^6.2.3",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "eslint": "^8.57.1",
-    "eslint-plugin-jsdoc": "^46.10.1"
+    "eslint": "^10.6.0",
+    "eslint-plugin-jsdoc": "^63.0.10"
   },
   "engines": {
     "node": ">17.0.0"
+  },
+  "allowScripts": {
+    "classic-level@3.0.0": true
   }
 }
