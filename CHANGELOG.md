@@ -2,6 +2,7 @@
 
 ### Fixes
  - Fixed error thrown when attempting to unpack a NeDB database.
+ - (zithith) Fixed adventure folder extraction ignoring `transformFolderName`.
 
 ### Improvements
  - Log a warning if a processed record contains entries that look like they might be embedded collections that are not otherwise registered.
